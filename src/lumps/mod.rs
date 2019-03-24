@@ -16,3 +16,4 @@
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
 pub mod entities;
+pub mod textures;

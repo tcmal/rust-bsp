@@ -25,12 +25,17 @@ use std::str;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
+/// Game-related map information
 pub struct EntitiesLump<'a> {
+    /// The unparsed string from which entity data was extracted
     pub string: &'a str,
+
+    /// The extracted entity data
     pub entities: Vec<Entity<'a>>
 }
 
 #[derive(Debug, Clone, PartialEq)]
+/// A game entity
 pub struct Entity<'a> {
     pub attributes: HashMap<&'a str, &'a str>,
 }

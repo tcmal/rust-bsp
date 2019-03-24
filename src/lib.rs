@@ -14,9 +14,16 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
+#![feature(try_trait)]
+
+#[macro_use]
+extern crate bitflags;
 
 pub mod lumps;
 pub mod directory;
+
+use std::option::NoneError;
+use std::convert::From;
 
 use directory::Header;
 use lumps::entities::EntitiesLump;
@@ -33,6 +40,12 @@ pub enum Error<'a> {
     },
     BadFormat,
     Unsupported { version: u32 }
+}
+
+impl<'a> From<NoneError> for Error<'a> {
+    fn from(_: NoneError) -> Error<'a> {
+        Error::BadFormat
+    }
 }
 
 pub type Result<'a, T> = std::result::Result<T, Error<'a>>;
