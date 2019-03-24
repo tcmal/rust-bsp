@@ -74,6 +74,13 @@ impl Header {
         Ok(Header {version: u32::from_le_bytes(*version), dir_entries})
     }
 
+    /// Get the lump at given index from the buffer, with offset & length based on this directory.
+    pub fn get_lump<'l>(&self, buf: &'l [u8], index: usize) -> &'l [u8] {
+        let entry = self.dir_entries[index];
+
+        &buf[entry.offset as usize..entry.offset as usize + entry.length as usize]
+    }
+
 }
 
 #[test]

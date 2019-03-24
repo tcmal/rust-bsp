@@ -25,7 +25,8 @@ pub enum Error<'a> {
     },
     BadSize {
         req: u32
-    }
+    },
+    BadFormat
 }
 
 pub type Result<'a, T> = std::result::Result<T, Error<'a>>;

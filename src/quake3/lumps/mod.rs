@@ -15,30 +15,4 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-//! Tools for representing Quake 3 BSP files.
-//! Q3 BSP files start with "IBSP" and have version number 0x2e
-
-/// The lump directory located at the start of the file
-pub mod directory;
-pub mod lumps;
-
-use crate::Result;
-use directory::Header;
-use lumps::entities::EntitiesLump;
-
-/// Represents a parsed BSP file.
-#[derive(Debug, Clone)]
-pub struct BSPFile<'a> {
-    pub directory: Header,
-    pub entities: EntitiesLump<'a>
-}
-
-impl<'a> BSPFile<'a> {
-    pub fn from_buffer(buf: &'a [u8]) -> Result<BSPFile<'a>> {
-        let header = Header::from(buf)?;
-
-        let entities = EntitiesLump::from_lump(header.get_lump(buf, 0))?;
-
-        Ok(BSPFile {directory: header, entities})
-    }
-}
+pub mod entities;
