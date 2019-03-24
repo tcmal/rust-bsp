@@ -15,9 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-pub mod quake3;
+pub mod lumps;
+pub mod directory;
+
+use directory::Header;
+use lumps::entities::EntitiesLump;
 
 #[derive(Debug)]
+/// An error encountered while parsing.
 pub enum Error<'a> {
     BadMagic {
         expected: &'static [u8],
@@ -26,7 +31,33 @@ pub enum Error<'a> {
     BadSize {
         req: u32
     },
-    BadFormat
+    BadFormat,
+    Unsupported { version: u32 }
 }
 
 pub type Result<'a, T> = std::result::Result<T, Error<'a>>;
+
+
+/// Represents a parsed BSP file.
+#[derive(Debug, Clone)]
+pub struct BSPFile<'a> {
+    pub directory: Header,
+    pub entities: EntitiesLump<'a>
+}
+
+impl<'a> BSPFile<'a> {
+    /// Try to parse the given buffer a a BSP file
+    pub fn from_buffer(buf: &'a [u8]) -> Result<BSPFile<'a>> {
+        let header = Header::from(buf)?;
+        
+        match header.version {
+            0x2e => {
+                // Quake 3
+                let entities = EntitiesLump::from_lump(header.get_lump(buf, 0))?;
+                Ok(BSPFile {directory: header, entities})
+            },
+            _ => Err(Error::Unsupported { version: header.version })
+        }
+
+    }
+}
