@@ -21,12 +21,13 @@ extern crate bitflags;
 
 pub mod lumps;
 pub mod directory;
+pub mod types;
 
 use std::option::NoneError;
 use std::convert::From;
 
 use directory::Header;
-use lumps::entities::EntitiesLump;
+use lumps::{EntitiesLump, PlanesLump, TexturesLump};
 
 #[derive(Debug)]
 /// An error encountered while parsing.
@@ -55,7 +56,9 @@ pub type Result<'a, T> = std::result::Result<T, Error<'a>>;
 #[derive(Debug, Clone)]
 pub struct BSPFile<'a> {
     pub directory: Header,
-    pub entities: EntitiesLump<'a>
+    pub entities: EntitiesLump<'a>,
+    pub textures: TexturesLump<'a>,
+    pub planes: PlanesLump
 }
 
 impl<'a> BSPFile<'a> {
@@ -67,7 +70,9 @@ impl<'a> BSPFile<'a> {
             0x2e => {
                 // Quake 3
                 let entities = EntitiesLump::from_lump(header.get_lump(buf, 0))?;
-                Ok(BSPFile {directory: header, entities})
+                let textures = TexturesLump::from_lump(header.get_lump(buf, 1))?;
+                let planes = PlanesLump::from_lump(header.get_lump(buf, 2))?;
+                Ok(BSPFile {directory: header, entities, textures, planes})
             },
             _ => Err(Error::Unsupported { version: header.version })
         }

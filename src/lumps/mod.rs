@@ -17,3 +17,8 @@
 
 pub mod entities;
 pub mod textures;
+pub mod planes;
+
+pub use entities::EntitiesLump;
+pub use planes::PlanesLump;
+pub use textures::TexturesLump;
