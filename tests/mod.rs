@@ -19,3 +19,4 @@
 
 mod tree;
 mod brushes;
+mod effects;

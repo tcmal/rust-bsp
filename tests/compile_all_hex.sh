@@ -20,3 +20,4 @@
 cd tests
 node ./compile_hex.js tree/test_tree.hex
 node ./compile_hex.js brushes/test_brushes.hex
+node ./compile_hex.js effects/test_effects.hex

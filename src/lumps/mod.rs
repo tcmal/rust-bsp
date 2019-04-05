@@ -20,6 +20,7 @@ pub mod textures;
 pub mod planes;
 pub mod tree;
 pub mod brushes;
+pub mod effects;
 mod helpers;
 
 pub use entities::EntitiesLump;
@@ -27,3 +28,4 @@ pub use planes::PlanesLump;
 pub use textures::TexturesLump;
 pub use tree::BSPTree;
 pub use brushes::BrushesLump;
+pub use effects::EffectsLump;

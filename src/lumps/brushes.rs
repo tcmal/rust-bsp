@@ -86,7 +86,7 @@ pub struct Brush {
 }
 
 /// Bounding surfacce for brush.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BrushSide {
     pub plane: i32,
     pub texture: i32
