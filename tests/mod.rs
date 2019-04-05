@@ -18,3 +18,4 @@
 #[cfg(test)]
 
 mod tree;
+mod brushes;

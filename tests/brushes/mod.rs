@@ -15,15 +15,23 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-pub mod entities;
-pub mod textures;
-pub mod planes;
-pub mod tree;
-pub mod brushes;
-mod helpers;
+use bsp::lumps::brushes::BrushesLump;
 
-pub use entities::EntitiesLump;
-pub use planes::PlanesLump;
-pub use textures::TexturesLump;
-pub use tree::BSPTree;
-pub use brushes::BrushesLump;
+#[test]
+fn test_brushes() {
+    let buf = include_bytes!("./test_brushes.bin");
+
+    let brushes = &buf[..0x24];
+    let sides = &buf[0x24..];
+
+    let parsed = BrushesLump::from_lump(brushes, sides).unwrap();
+
+    assert_eq!(parsed.brushes[0].texture, 1);
+    assert_eq!(parsed.brushes[0].sides.len(), 1);
+
+    assert_eq!(parsed.brushes[1].texture, 2);
+    assert_eq!(parsed.brushes[1].sides.len(), 3);
+
+    assert_eq!(parsed.brushes[2].texture, 3);
+    assert_eq!(parsed.brushes[2].sides.len(), 0);
+}
