@@ -1,0 +1,8 @@
+// position x   y               z
+00 00 00 00     00 00 00 00     00 00 00 00
+// texcoord[0]                  texcoord[1]
+00 00 80 3f     00 00 00 40     00 00 40 40     00 00 80 40
+// normal x     y               z
+00 00 a0 40     00 00 c0 40     00 00 e0 40
+// color
+ff ff ff ff

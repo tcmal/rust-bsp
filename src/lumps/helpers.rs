@@ -22,3 +22,8 @@ pub fn slice_to_i32(slice: &[u8]) -> i32 {
         slice.try_into().unwrap()
     )
 }
+pub fn slice_to_f32(slice: &[u8]) -> f32 {
+    f32::from_bits(u32::from_le_bytes(
+        slice.try_into().unwrap()
+    ))
+}

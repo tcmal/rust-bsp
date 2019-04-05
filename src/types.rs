@@ -20,7 +20,7 @@
 use std::convert::TryInto;
 
 /// Generic (x,y,z) struct.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vector3 {
     pub x: f32,
     pub y: f32,
@@ -54,7 +54,7 @@ impl Vector3 {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IVector3 {
     pub x: i32,
     pub y: i32,
@@ -86,5 +86,28 @@ impl IVector3 {
 
     pub fn from_slice(bytes: &[u8]) -> IVector3 {
         IVector3::from_bytes(bytes.try_into().unwrap())
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct RGBA {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+    pub a: u8
+}
+
+impl RGBA {
+    pub fn from_bytes(bytes: &[u8; 4]) -> RGBA {
+        RGBA {
+            r: bytes[0],
+            g: bytes[1],
+            b: bytes[2],
+            a: bytes[3],
+        }
+    }
+
+    pub fn from_slice(slice: &[u8])  -> RGBA {
+        RGBA::from_bytes(slice.try_into().unwrap())
     }
 }

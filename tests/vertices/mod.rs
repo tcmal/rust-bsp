@@ -15,9 +15,20 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-#[cfg(test)]
+use bsp::lumps::vertices::{VerticesLump, TexCoord};
+use bsp::types::{Vector3, RGBA};
 
-mod tree;
-mod brushes;
-mod effects;
-mod vertices;
+#[test]
+fn test_vertices() {
+    let lump = include_bytes!("./test_vertices.bin");
+    let parsed = VerticesLump::from_lump(lump).unwrap();
+
+    println!("{:?}", parsed);
+
+    assert_eq!(parsed.vertices.len(), 1);
+    
+    assert_eq!(parsed.vertices[0].position, Vector3::zero());
+    assert_eq!(parsed.vertices[0].tex, TexCoord { u: [1.0, 2.0], v: [3.0, 4.0] });
+    assert_eq!(parsed.vertices[0].normal, Vector3 { x: 5.0, y: 6.0, z: 7.0 });
+    assert_eq!(parsed.vertices[0].color, RGBA { r: 255, g: 255, b: 255, a: 255 });
+}
