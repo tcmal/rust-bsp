@@ -45,16 +45,19 @@ impl PlanesLump {
             Plane { normal: Vector3::zero(), dist: 0.0, complement_normal: Vector3::zero() }; length / 2
         ].into_boxed_slice();
 
-        for n in (0..length).step_by(2) {
+        let mut n = 0;
+        while n < length {
             let offset = n * PLANE_SIZE;
             let plane = &lump[offset..offset + (PLANE_SIZE * 2)];
-            planes[n] = Plane {
+            planes[n / 2] = Plane {
                 normal: Vector3::from_bytes(plane[0..12].try_into().unwrap()),
                 dist: f32::from_bits(u32::from_le_bytes(
                     plane[12..16].try_into().unwrap()
                 )),
                 complement_normal: Vector3::from_bytes(plane[16..28].try_into().unwrap())
-            }
+            };
+
+            n += 2;
         }
 
         Ok(PlanesLump { planes })
