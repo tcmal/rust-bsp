@@ -15,13 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-pub mod entities;
-pub mod textures;
-pub mod planes;
-pub mod tree;
-mod helpers;
+use std::convert::TryInto;
 
-pub use entities::EntitiesLump;
-pub use planes::PlanesLump;
-pub use textures::TexturesLump;
-pub use tree::BSPTree;
+pub fn slice_to_i32(slice: &[u8]) -> i32 {
+    i32::from_le_bytes(
+        slice.try_into().unwrap()
+    )
+}

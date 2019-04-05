@@ -15,13 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-pub mod entities;
-pub mod textures;
-pub mod planes;
-pub mod tree;
-mod helpers;
+#[cfg(test)]
 
-pub use entities::EntitiesLump;
-pub use planes::PlanesLump;
-pub use textures::TexturesLump;
-pub use tree::BSPTree;
+mod tree;

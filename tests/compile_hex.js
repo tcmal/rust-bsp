@@ -1,3 +1,4 @@
+#!/usr/bin/node
 // Copyright (C) 2019 Oscar Shrimpton
 // 
 // This file is part of rust_bsp.
@@ -15,13 +16,19 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-pub mod entities;
-pub mod textures;
-pub mod planes;
-pub mod tree;
-mod helpers;
 
-pub use entities::EntitiesLump;
-pub use planes::PlanesLump;
-pub use textures::TexturesLump;
-pub use tree::BSPTree;
+var fs = require('fs');
+var exec = require('child_process').execSync;
+
+var re = /\/\/ .*|[ \n]/g;
+
+var source = process.argv[2];
+var target = source.replace(".hex", ".bin");
+
+console.log(source + " --> " + target);
+
+var f = fs.readFileSync(source).toString();
+
+var hex = f.replace(re, "");
+
+exec("echo \"" + hex + "\" | xxd -r -p - " + target);

@@ -48,4 +48,43 @@ impl Vector3 {
                 ))
         }
     }
+
+    pub fn from_slice(bytes: &[u8]) -> Vector3 {
+        Vector3::from_bytes(bytes.try_into().unwrap())
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct IVector3 {
+    pub x: i32,
+    pub y: i32,
+    pub z: i32
+}
+
+
+impl IVector3 {
+    /// (0, 0, 0)
+    pub fn zero() -> IVector3 {
+        IVector3 { x: 0, y: 0, z: 0 }
+    }
+
+    /// Constructs a vector from a byte buffer.
+    /// bytes: 12 byte buffer: (x,y,z) as 3 i32s.
+    pub fn from_bytes(bytes: [u8; 12]) -> IVector3 {
+        IVector3 {
+            x: i32::from_le_bytes(
+                    bytes[0..4].try_into().unwrap()
+                ),
+            y: i32::from_le_bytes(
+                    bytes[4..8].try_into().unwrap()
+                ),
+            z: i32::from_le_bytes(
+                    bytes[8..12].try_into().unwrap()
+                )
+        }
+    }
+
+    pub fn from_slice(bytes: &[u8]) -> IVector3 {
+        IVector3::from_bytes(bytes.try_into().unwrap())
+    }
 }
