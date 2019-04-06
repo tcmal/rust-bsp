@@ -19,7 +19,7 @@
 
 use crate::types::{Vector3, RGBA};
 use crate::{Result, Error};
-use super::helpers::slice_to_f32;
+use super::helpers::{slice_to_i32, slice_to_f32};
 use std::convert::TryInto;
 
 const VERTEX_SIZE: usize = (4 * 3) + (2 * 2 * 4) + (4 * 3) + 4;
@@ -76,5 +76,35 @@ impl VerticesLump {
         }
 
         Ok(VerticesLump { vertices: vertices.into_boxed_slice() })
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct MeshVert {
+    pub offset: i32
+}
+
+#[derive(Debug, Clone)]
+pub struct MeshVertsLump {
+    pub meshverts: Box<[MeshVert]>
+}
+
+impl MeshVertsLump {
+    pub fn from_lump(lump: &[u8]) -> Result<'static, MeshVertsLump> {
+        
+        if lump.len() % 4 != 0 {
+            return Err(Error::BadFormat);
+        }
+
+        let length = lump.len() / 4;
+        let mut meshverts = Vec::with_capacity(length as usize);
+
+        for n in 0..length {
+            meshverts.push(MeshVert {
+                offset: slice_to_i32(&lump[n * 4..(n + 1) * 4]),
+            })
+        }
+
+        Ok(MeshVertsLump { meshverts: meshverts.into_boxed_slice() })
     }
 }

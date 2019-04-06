@@ -22,3 +22,4 @@ node ./compile_hex.js tree/test_tree.hex
 node ./compile_hex.js brushes/test_brushes.hex
 node ./compile_hex.js effects/test_effects.hex
 node ./compile_hex.js vertices/test_vertices.hex
+node ./compile_hex.js vertices/test_meshvertices.hex

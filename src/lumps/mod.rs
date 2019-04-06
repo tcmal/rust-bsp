@@ -30,4 +30,4 @@ pub use textures::TexturesLump;
 pub use tree::BSPTree;
 pub use brushes::BrushesLump;
 pub use effects::EffectsLump;
-pub use vertices::VerticesLump;
+pub use vertices::{VerticesLump, MeshVertsLump};
