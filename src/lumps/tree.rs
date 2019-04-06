@@ -17,8 +17,7 @@
 
 //! Parses the BSP tree into a usable format
 
-use crate::types::IVector3;
-use crate::{Error, Result};
+use crate::types::{Error, Result, IVector3};
 use crate::lumps::helpers::slice_to_i32;
 
 const NODE_SIZE: usize = 4 + (4 * 2) + (4 * 3) + (4 * 3);

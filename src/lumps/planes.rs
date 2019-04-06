@@ -19,10 +19,8 @@
 
 const PLANE_SIZE: usize = (4 * 3) + 4;
 
-use std::convert::TryInto;
-
-use crate::types::Vector3;
-use crate::{Result, Error};
+use crate::types::{Result, Error, Vector3};
+use super::helpers::slice_to_f32;
 
 /// The planes lump from a BSP file.
 /// Found at lump index 2 in a q3 bsp.
@@ -41,26 +39,22 @@ impl PlanesLump {
             return Err(Error::BadFormat);
         }
 
-        let mut planes = vec![
-            Plane { normal: Vector3::zero(), dist: 0.0, complement_normal: Vector3::zero() }; length / 2
-        ].into_boxed_slice();
+        let mut planes = Vec::with_capacity(length / 2);
 
         let mut n = 0;
         while n < length {
             let offset = n * PLANE_SIZE;
             let plane = &lump[offset..offset + (PLANE_SIZE * 2)];
-            planes[n / 2] = Plane {
-                normal: Vector3::from_bytes(plane[0..12].try_into().unwrap()),
-                dist: f32::from_bits(u32::from_le_bytes(
-                    plane[12..16].try_into().unwrap()
-                )),
-                complement_normal: Vector3::from_bytes(plane[16..28].try_into().unwrap())
-            };
+            planes.push(Plane {
+                normal: Vector3::from_slice(&plane[0..12]),
+                dist: slice_to_f32(&plane[12..16]),
+                complement_normal: Vector3::from_slice(&plane[16..28])
+            });
 
             n += 2;
         }
 
-        Ok(PlanesLump { planes })
+        Ok(PlanesLump { planes: planes.into_boxed_slice() })
     }
 }
 

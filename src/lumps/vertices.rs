@@ -15,15 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-// todo: write docs
-
-use crate::types::{Vector3, RGBA};
-use crate::{Result, Error};
+use crate::types::{Vector3, RGBA, Result, Error};
 use super::helpers::{slice_to_i32, slice_to_f32};
 use std::convert::TryInto;
 
+/// The size of one vertex
 const VERTEX_SIZE: usize = (4 * 3) + (2 * 2 * 4) + (4 * 3) + 4;
 
+/// A vertex, used to describe a face.
 #[derive(Debug, Clone, Copy)]
 pub struct Vertex {
     pub position: Vector3,
@@ -32,6 +31,8 @@ pub struct Vertex {
     pub color: RGBA
 }
 
+/// Represents a TexCoord. 0 = surface, 1= lightmap.
+/// This could also be written as [[f32; 2]; 2]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TexCoord {
     pub u: [f32; 2],
@@ -39,6 +40,7 @@ pub struct TexCoord {
 }
 
 impl TexCoord {
+    /// Internal function. Converts a slice to a TexCoord.
     fn from_bytes(bytes: &[u8; 16]) -> TexCoord {
         TexCoord {
             u: [ slice_to_f32(&bytes[0..4]), slice_to_f32(&bytes[4..8]) ],
@@ -47,6 +49,7 @@ impl TexCoord {
     }
 }
 
+/// The Vertices Lump in a BSP file. Stores a list of vertices.
 #[derive(Debug, Clone)]
 pub struct VerticesLump {
     pub vertices: Box<[Vertex]>
@@ -54,6 +57,7 @@ pub struct VerticesLump {
 
 
 impl VerticesLump {
+    /// Parse a Vertices Lump from the data in a BSP file.
     pub fn from_lump(lump: &[u8]) -> Result<'static, VerticesLump> {
         
         if lump.len() % VERTEX_SIZE != 0 {
@@ -79,17 +83,20 @@ impl VerticesLump {
     }
 }
 
+/// A vertex offset, used to describe generalised triangle meshes
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MeshVert {
     pub offset: i32
 }
 
+/// A list of MeshVerts
 #[derive(Debug, Clone)]
 pub struct MeshVertsLump {
     pub meshverts: Box<[MeshVert]>
 }
 
 impl MeshVertsLump {
+    /// Parse the given lump as a list of MeshVerts.
     pub fn from_lump(lump: &[u8]) -> Result<'static, MeshVertsLump> {
         
         if lump.len() % 4 != 0 {

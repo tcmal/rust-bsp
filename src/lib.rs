@@ -23,34 +23,9 @@ pub mod lumps;
 pub mod directory;
 pub mod types;
 
-use std::option::NoneError;
-use std::convert::From;
-
+use types::{Result, Error};
 use directory::Header;
 use lumps::{EntitiesLump, PlanesLump, TexturesLump};
-
-#[derive(Debug)]
-/// An error encountered while parsing.
-pub enum Error<'a> {
-    BadMagic {
-        expected: &'static [u8],
-        actual: &'a [u8]
-    },
-    BadSize {
-        req: u32
-    },
-    BadFormat,
-    Unsupported { version: u32 }
-}
-
-impl<'a> From<NoneError> for Error<'a> {
-    fn from(_: NoneError) -> Error<'a> {
-        Error::BadFormat
-    }
-}
-
-pub type Result<'a, T> = std::result::Result<T, Error<'a>>;
-
 
 /// Represents a parsed BSP file.
 #[derive(Debug, Clone)]

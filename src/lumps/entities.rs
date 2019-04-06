@@ -19,10 +19,10 @@ const QUOTE: u8 = b'"';
 const END_BRACKET: u8 = b'}';
 const START_BRACKET: u8 = b'{';
 
-use crate::{Result, Error};
-
 use std::str;
 use std::collections::HashMap;
+
+use crate::types::{Result, Error};
 
 #[derive(Debug, Clone)]
 /// Game-related map information
@@ -40,12 +40,14 @@ pub struct Entity<'a> {
     pub attributes: HashMap<&'a str, &'a str>,
 }
 
+/// Internal enum to parse through the entities string.
 #[derive(PartialEq, Eq)]
 enum ParseState {
     InKey, InValue, AfterKey, InsideEntity, OutsideEntity
 }
 
 impl<'a> EntitiesLump<'a> {
+    /// Parse the given lump as an Entities Lump.
     pub fn from_lump(lump: &'a [u8]) -> Result<EntitiesLump<'a>> {
         use ParseState::*;
 

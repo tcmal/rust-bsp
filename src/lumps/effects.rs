@@ -15,8 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::{Error, Result};
 use std::str;
+
+use crate::types::{Error, Result};
 use super::brushes::{BrushesLump, Brush};
 use super::helpers::slice_to_i32;
 

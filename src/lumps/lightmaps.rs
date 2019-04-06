@@ -17,9 +17,10 @@
 
 //! Parses the lightmaps lump
 
-use crate::{Result, Error};
 use std::convert::TryInto;
 use std::fmt;
+
+use crate::types::{Result, Error};
 
 /// The size of one lightmap
 const LIGHTMAP_SIZE: usize = 128 * 128 * 3;
@@ -66,10 +67,10 @@ impl<'a> LightmapsLump<'a> {
             let raw = &lump[n * LIGHTMAP_SIZE..(n+1) * LIGHTMAP_SIZE];
             let mut map: [[&'a [u8]; 128]; 3] = [[&[0; 128]; 128]; 3];
 
-            for c in 0..3 {
+            for (colour_index, colour) in map.iter_mut().enumerate() {
                 for x in 0..128 {
-                    let start = (c * 128 * 128) + (x * 128);
-                    map[c][x] = raw[start..start + 128].try_into().unwrap();
+                    let start = (colour_index * 128 * 128) + (x * 128);
+                    colour[x] = raw[start..start + 128].try_into().unwrap();
                 }
             }
             maps.push(Lightmap {

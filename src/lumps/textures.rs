@@ -16,23 +16,24 @@
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::str;
-use std::convert::TryInto;
-use crate::{Result, Error};
+
+use crate::types::{Result, Error};
+use super::helpers::slice_to_u32;
 
 const TEXTURE_LUMP_SIZE: usize = (64 + 4 + 4);
 
 #[derive(Debug, Clone)]
 /// Surface descriptions
 pub struct TexturesLump<'a> {
-    textures: Box<[Texture<'a>]>
+    pub textures: Box<[Texture<'a>]>
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 /// A record from a `TexturesLump`
 pub struct Texture<'a> {
-    name: &'a str,
-    surface: SurfaceFlags,
-    contents: ContentsFlags
+    pub name: &'a str,
+    pub surface: SurfaceFlags,
+    pub contents: ContentsFlags
 }
 
 impl<'a> TexturesLump<'a> {
@@ -49,22 +50,18 @@ impl<'a> TexturesLump<'a> {
         }
 
         let length = lump.len() / TEXTURE_LUMP_SIZE;
-        let mut textures = vec![Texture {name: "", surface: SurfaceFlags::SKIP, contents: ContentsFlags::ORIGIN}; length].into_boxed_slice();
+        let mut textures = Vec::with_capacity(length);
 
         for n in 0..length {
             let offset = n * TEXTURE_LUMP_SIZE;
-            textures[n] = Texture {
+            textures.push(Texture {
                 name: str::from_utf8(&lump[offset..offset + 64]).unwrap(),
-                surface: SurfaceFlags::from_bits(u32::from_le_bytes(
-                    lump[offset + 64..offset + 68].try_into().unwrap()
-                ))?,
-                contents: ContentsFlags::from_bits(u32::from_le_bytes(
-                    lump[offset + 68..offset + 72].try_into().unwrap()
-                ))?,
-            };
+                surface: SurfaceFlags::from_bits(slice_to_u32(&lump[offset + 64..offset + 68]))?,
+                contents: ContentsFlags::from_bits(slice_to_u32(&lump[offset + 68..offset + 72]))?,
+            });
         }
 
-        Ok(TexturesLump { textures })
+        Ok(TexturesLump { textures: textures.into_boxed_slice() })
     }
 }
 
@@ -132,7 +129,6 @@ bitflags!(
 );
 
 bitflags!(
-
     /// Extracted from the Q3 arena engine code. Less documented than `SurfaceFlags`.
     /// https://github.com/id-Software/Quake-III-Arena/blob/master/code/game/surfaceflags.h
     pub struct ContentsFlags: u32 {

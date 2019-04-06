@@ -17,7 +17,8 @@
 
 //! Various types used in parsed BSP files.
 
-use std::convert::TryInto;
+use std::convert::{TryInto, From};
+use std::option::NoneError;
 
 /// Generic (x,y,z) struct.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -54,6 +55,7 @@ impl Vector3 {
     }
 }
 
+/// Integer (x,y,z) struct.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IVector3 {
     pub x: i32,
@@ -70,6 +72,8 @@ impl IVector3 {
 
     /// Constructs a vector from a byte buffer.
     /// bytes: 12 byte buffer: (x,y,z) as 3 i32s.
+    /// # Panics
+    /// If bytes is not 12 bytes long.
     pub fn from_bytes(bytes: [u8; 12]) -> IVector3 {
         IVector3 {
             x: i32::from_le_bytes(
@@ -89,6 +93,7 @@ impl IVector3 {
     }
 }
 
+/// RGBA Colour (0-255)
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RGBA {
     pub r: u8,
@@ -98,7 +103,8 @@ pub struct RGBA {
 }
 
 impl RGBA {
-    pub fn from_bytes(bytes: &[u8; 4]) -> RGBA {
+    /// Interpret the given bytes as an RGBA colour.
+    pub fn from_bytes(bytes: [u8; 4]) -> RGBA {
         RGBA {
             r: bytes[0],
             g: bytes[1],
@@ -107,7 +113,32 @@ impl RGBA {
         }
     }
 
+    /// Convert a slice to an RGBA colour
+    /// # Panics
+    /// If slice is not 4 bytes long.
     pub fn from_slice(slice: &[u8])  -> RGBA {
         RGBA::from_bytes(slice.try_into().unwrap())
     }
 }
+#[derive(Debug)]
+/// An error encountered while parsing.
+pub enum Error<'a> {
+    BadMagic {
+        expected: &'static [u8],
+        actual: &'a [u8]
+    },
+    BadSize {
+        req: u32
+    },
+    BadFormat,
+    Unsupported { version: u32 }
+}
+
+impl<'a> From<NoneError> for Error<'a> {
+    fn from(_: NoneError) -> Error<'a> {
+        Error::BadFormat
+    }
+}
+
+/// Generic result type.
+pub type Result<'a, T> = std::result::Result<T, Error<'a>>;

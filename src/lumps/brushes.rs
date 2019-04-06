@@ -24,7 +24,7 @@ const BRUSH_SIZE: usize = (4 * 3);
 const SIDE_SIZE: usize = (4 * 2);
 
 use crate::lumps::helpers::slice_to_i32;
-use crate::{Result, Error};
+use crate::types::{Result, Error};
 
 /// A brushes lump from a bsp file.
 /// BrushSides are also stored inside here.
