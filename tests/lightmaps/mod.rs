@@ -15,10 +15,21 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-#[cfg(test)]
+use bsp::lumps::LightmapsLump;
 
-mod tree;
-mod brushes;
-mod effects;
-mod vertices;
-mod lightmaps;
+#[test]
+fn test_lightmaps() {
+    let lump = include_bytes!("./test_lightmaps.bin");
+
+    let parsed = LightmapsLump::from_lump(lump).unwrap();
+
+    assert_eq!(parsed.maps.len(), 1);
+
+    for c in &parsed.maps[0].map {
+        for x in 0..128 {
+            for y in c[x] {
+                assert_eq!(*y, x as u8);
+            }
+        }
+    }
+}

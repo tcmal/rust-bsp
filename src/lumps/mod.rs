@@ -22,6 +22,7 @@ pub mod tree;
 pub mod brushes;
 pub mod effects;
 pub mod vertices;
+pub mod lightmaps;
 mod helpers;
 
 pub use entities::EntitiesLump;
@@ -31,3 +32,4 @@ pub use tree::BSPTree;
 pub use brushes::BrushesLump;
 pub use effects::EffectsLump;
 pub use vertices::{VerticesLump, MeshVertsLump};
+pub use lightmaps::LightmapsLump;
