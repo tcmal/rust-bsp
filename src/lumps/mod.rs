@@ -24,6 +24,7 @@ pub mod effects;
 pub mod vertices;
 pub mod lightmaps;
 pub mod faces;
+pub mod lightvols;
 mod helpers;
 
 pub use entities::EntitiesLump;
