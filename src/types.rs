@@ -93,6 +93,72 @@ impl IVector3 {
     }
 }
 
+/// Integer (x,y) struct.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct IVector2 {
+    pub x: i32,
+    pub y: i32
+}
+
+
+impl IVector2 {
+    /// (0, 0)
+    pub fn zero() -> IVector2 {
+        IVector2 { x: 0, y: 0 }
+    }
+
+    /// Constructs a vector from a byte buffer.
+    /// bytes: 12 byte buffer: (x,y) as 2 i32s.
+    /// # Panics
+    /// If bytes is not 8 bytes long.
+    pub fn from_bytes(bytes: [u8; 8]) -> IVector2 {
+        IVector2 {
+            x: i32::from_le_bytes(
+                    bytes[0..4].try_into().unwrap()
+                ),
+            y: i32::from_le_bytes(
+                    bytes[4..8].try_into().unwrap()
+                )
+        }
+    }
+
+    pub fn from_slice(bytes: &[u8]) -> IVector2 {
+        IVector2::from_bytes(bytes.try_into().unwrap())
+    }
+}
+
+/// Integer (x,y) struct.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Vector2 {
+    pub x: f32,
+    pub y: f32
+}
+
+
+impl Vector2 {
+    /// (0, 0)
+    pub fn zero() -> Vector2 {
+        Vector2 { x: 0.0, y: 0.0 }
+    }
+
+    /// Constructs a vector from a byte buffer.
+    /// bytes: 12 byte buffer: (x,y) as 2 f32s.
+    pub fn from_bytes(bytes: [u8; 8]) -> Vector2 {
+        Vector2 {
+            x: f32::from_bits(u32::from_le_bytes(
+                    bytes[0..4].try_into().unwrap()
+                )),
+            y: f32::from_bits(u32::from_le_bytes(
+                    bytes[4..8].try_into().unwrap()
+                ))
+        }
+    }
+
+    pub fn from_slice(bytes: &[u8]) -> Vector2 {
+        Vector2::from_bytes(bytes.try_into().unwrap())
+    }
+}
+
 /// RGBA Colour (0-255)
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RGBA {
@@ -120,6 +186,38 @@ impl RGBA {
         RGBA::from_bytes(slice.try_into().unwrap())
     }
 }
+
+/// RGB Colour (0-255)
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct RGB {
+    pub r: u8,
+    pub g: u8,
+    pub b: u8,
+}
+
+impl RGB {
+    /// 255, 255, 255
+    pub fn white() -> RGB {
+        RGB { r: 255, g: 255, b: 255 }
+    }
+
+    /// Interpret the given bytes as an RGB colour.
+    pub fn from_bytes(bytes: [u8; 3]) -> RGB {
+        RGB {
+            r: bytes[0],
+            g: bytes[1],
+            b: bytes[2],
+        }
+    }
+
+    /// Convert a slice to an RGB colour
+    /// # Panics
+    /// If slice is not 3 bytes long.
+    pub fn from_slice(slice: &[u8])  -> RGB {
+        RGB::from_bytes(slice.try_into().unwrap())
+    }
+}
+
 #[derive(Debug)]
 /// An error encountered while parsing.
 pub enum Error<'a> {
@@ -131,7 +229,11 @@ pub enum Error<'a> {
         req: u32
     },
     BadFormat,
-    Unsupported { version: u32 }
+    Unsupported { version: u32 },
+    BadRef {
+        loc: &'static str,
+        val: usize
+    }
 }
 
 impl<'a> From<NoneError> for Error<'a> {
