@@ -23,19 +23,20 @@ const BRUSH_SIZE: usize = (4 * 3);
 /// The size of one brushsize record
 const SIDE_SIZE: usize = (4 * 2);
 
+use crate::lumps::textures::{Texture, TexturesLump};
 use crate::lumps::helpers::slice_to_i32;
-use crate::types::{Result, Error};
+use crate::types::{Result, Error, TransparentNonNull};
 
 /// A brushes lump from a bsp file.
 /// BrushSides are also stored inside here.
 #[derive(Debug, Clone)]
-pub struct BrushesLump {
-    pub brushes: Box<[Brush]>
+pub struct BrushesLump<'a> {
+    pub brushes: Box<[Brush<'a>]>
 }
 
-impl BrushesLump {
+impl<'a> BrushesLump<'a> {
     /// Parse the brushes & brushsides lump from a bsp file.
-    pub fn from_lump(brushes_lump: &[u8], brush_sides_lump: &[u8]) -> Result<'static, BrushesLump> {
+    pub fn from_lump(brushes_lump: &'a [u8], brush_sides_lump: &'a [u8], textures_lump: &TexturesLump<'a>) -> Result<'static, BrushesLump<'a>> {
         
         if brushes_lump.len() % BRUSH_SIZE != 0 || brush_sides_lump.len() % SIDE_SIZE != 0 {
             return Err(Error::BadFormat);
@@ -47,10 +48,14 @@ impl BrushesLump {
         for n in 0..length {
             let offset = n * BRUSH_SIZE;
             let brush = &brushes_lump[offset..offset + BRUSH_SIZE];
+            let texture_index = slice_to_i32(&brush[8..12]) as usize;
+            if texture_index >= textures_lump.textures.len() {
+                return Err(Error::BadRef { loc: "Brush.Texture", val: texture_index })
+            }
 
             brushes.push(Brush {
                 sides: BrushesLump::get_sides(brush_sides_lump, slice_to_i32(&brush[0..4]), slice_to_i32(&brush[4..8])),
-                texture: slice_to_i32(&brush[8..12])
+                texture: (&textures_lump.textures[texture_index]).into()
             });
         }
 
@@ -75,14 +80,20 @@ impl BrushesLump {
 
         sides.into_boxed_slice()
     }
+
+    /// Helper function to get an empty brushes lump. 
+    /// This is used when initialising a BSP file because of references.
+    pub fn empty() -> BrushesLump<'static> {
+        BrushesLump { brushes: vec![].into_boxed_slice() }
+    }
 }
 
 /// One brush record. Used for collision detection.
 /// "Each brush describes a convex volume as defined by its surrounding surfaces."
-#[derive(Debug, Clone)]
-pub struct Brush {
+#[derive(Debug, Clone, PartialEq)]
+pub struct Brush<'a> {
     pub sides: Box<[BrushSide]>,
-    pub texture: i32
+    pub texture: TransparentNonNull<Texture<'a>>
 }
 
 /// Bounding surfacce for brush.

@@ -17,11 +17,12 @@
 
 //! Various types used in parsed BSP files.
 
-use std::convert::{From, TryInto};
-use std::ops::Deref;
-use std::ptr::NonNull;
-use std::option::NoneError;
 
+use std::convert::{From, TryInto};
+use std::fmt;
+use std::ops::Deref;
+use std::option::NoneError;
+use std::ptr::NonNull;
 
 /// Generic (x,y,z) struct.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -241,15 +242,36 @@ pub type Result<'a, T> = std::result::Result<T, Error<'a>>;
 /// A helper wrapper around a NonNull pointer that just automatically dereferences it.
 /// This is because the BSPFile struct is self-referential in many places and otherwise you'd need lots of code marked unsafe.
 /// With our struct however, we do guarantee safety. Be careful if you're using lumps outside of that however.
+#[derive(Clone, PartialEq)]
 pub struct TransparentNonNull<T> {
     ptr: NonNull<T>,
 }
 
+/// This is the transparent part.
 impl<T> Deref for TransparentNonNull<T> {
     type Target = T;
     fn deref(&self) -> &T {
         unsafe {
             return self.ptr.as_ref();
+        }
+    }
+}
+
+/// This makes sure debug output shows the actual object, not just a hex address.
+impl<T> fmt::Debug for TransparentNonNull<T>
+where
+    T: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "TransparentNonNull {{ {:?} }}", **self)
+    }
+}
+
+/// And this is basically what it is internally.
+impl<T> From<&T> for TransparentNonNull<T> {
+    fn from(reference: &T) -> TransparentNonNull<T> {
+        TransparentNonNull {
+            ptr: NonNull::from(reference),
         }
     }
 }

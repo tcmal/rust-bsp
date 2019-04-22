@@ -31,7 +31,7 @@ pub struct Effect<'a> {
     pub name: &'a str,
 
     /// The brush used for this effect
-    pub brush: &'a Brush
+    pub brush: &'a Brush<'a>
     
     // todo: unknown: i32
 }
