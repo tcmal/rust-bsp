@@ -26,7 +26,7 @@ pub mod types;
 use std::pin::Pin;
 
 use directory::Header;
-use lumps::{BrushesLump, EntitiesLump, LightVolsLump, PlanesLump, TexturesLump};
+use lumps::{BrushesLump, EntitiesLump, LightVolsLump, PlanesLump, TexturesLump, VerticesLump, MeshVertsLump, LightmapsLump};
 use types::{Error, Result};
 
 /// Represents a parsed BSP file.
@@ -38,6 +38,9 @@ pub struct BSPFile<'a> {
     pub planes: PlanesLump,
     pub lightvols: LightVolsLump,
     pub brushes: BrushesLump<'a>,
+    pub vertices: VerticesLump,
+    pub meshverts: MeshVertsLump,
+    pub lightmaps: LightmapsLump,
 }
 
 impl<'a> BSPFile<'a> {
@@ -49,17 +52,29 @@ impl<'a> BSPFile<'a> {
             0x2e => {
                 // Quake 3
 
+                // Because of the way this works, each "level" is compiled, moved into the struct, then repeat till the whole file is parsed.
+                // Each lump can only be parsed once all its dependents are, so the empty function is just a decoy, it should never be exposed.
+
                 // Level 1 - No dependencies
                 let entities = EntitiesLump::from_lump(header.get_lump(buf, 0))?;
                 let textures = TexturesLump::from_lump(header.get_lump(buf, 1))?;
                 let planes = PlanesLump::from_lump(header.get_lump(buf, 2))?;
-                let lightvols = LightVolsLump::from_lump(header.get_lump(buf, 2))?;
+
+                let vertices = VerticesLump::from_lump(header.get_lump(buf, 10))?;
+                let meshverts = MeshVertsLump::from_lump(header.get_lump(buf, 11))?;
+
+                let lightmaps = LightmapsLump::from_lump(header.get_lump(buf, 14))?;
+                let lightvols = LightVolsLump::from_lump(header.get_lump(buf, 15))?;
+
                 let res = Box::pin(BSPFile {
                     directory: header,
                     entities,
                     textures,
                     planes,
                     lightvols,
+                    lightmaps,
+                    meshverts,
+                    vertices,
                     brushes: BrushesLump::empty()
                 });
 
