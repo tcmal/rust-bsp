@@ -15,6 +15,8 @@ If you'd like to contribute code, check the issues tab for others who need your 
 
 Code should match the code style, be thoroughly tested and documented. Read the notes below about testing and use `clippy` to help with this.
 
+Commits should also be descriptive.
+
 ## Testing
 
 You'll need to run `scripts/pre_test.sh` to compile the binary files used for tests.
