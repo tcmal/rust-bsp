@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/sh
 # Copyright (C) 2019 Oscar Shrimpton
 # 
 # This file is part of rust_bsp.
@@ -16,11 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-
-cd tests
-node ./compile_hex.js tree/test_tree.hex
-node ./compile_hex.js brushes/test_brushes.hex
-node ./compile_hex.js effects/test_effects.hex
-node ./compile_hex.js vertices/test_vertices.hex
-node ./compile_hex.js vertices/test_meshvertices.hex
-node ./compile_hex.js lightmaps/test_lightmaps.hex
+node scripts/compile_hex.js tests/tree/test_tree.hex
+node scripts/compile_hex.js tests/brushes/test_brushes.hex
+node scripts/compile_hex.js tests/effects/test_effects.hex
+node scripts/compile_hex.js tests/vertices/test_vertices.hex
+node scripts/compile_hex.js tests/vertices/test_meshvertices.hex
+node scripts/compile_hex.js tests/lightmaps/test_lightmaps.hex

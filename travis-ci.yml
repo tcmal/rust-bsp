@@ -1,0 +1,7 @@
+language: rust
+rust:
+  - nightly
+cache: cargo
+script:
+  - ./scripts/pre_test.sh
+  - cargo test --verbose
