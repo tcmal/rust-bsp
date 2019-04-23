@@ -59,7 +59,7 @@ impl PlanesLump {
 }
 
 /// Generic plane, referenced by nodes & brushsizes
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Plane {
     /// Plane normal
     pub normal: Vector3,

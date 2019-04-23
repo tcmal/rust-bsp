@@ -15,26 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-
-use bsp::lumps::brushes::{Brush, BrushSide, BrushesLump};
+use bsp::lumps::textures::{Texture, SurfaceFlags, ContentsFlags};
+use bsp::lumps::brushes::{Brush, BrushesLump};
 use bsp::lumps::effects::EffectsLump;
-use bsp::lumps::textures::{ContentsFlags, SurfaceFlags, Texture};
 use bsp::types::TransparentNonNull;
 
 #[test]
 fn test_effects() {
     let brushes = BrushesLump {
         brushes: Box::new([Brush {
-            sides: Box::new([
-                BrushSide {
-                    plane: 0,
-                    texture: 0,
-                },
-                BrushSide {
-                    plane: 1,
-                    texture: 1,
-                },
-            ]),
+            sides: vec![].into_boxed_slice(),
             texture: TransparentNonNull::from(&Texture {
                 name: "one",
                 surface: SurfaceFlags::SKIP,

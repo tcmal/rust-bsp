@@ -85,7 +85,7 @@ impl<'a> BSPFile<'a> {
                 });
 
                 // Then the next level is constructed
-                let brushes = BrushesLump::from_lump(header.get_lump(buf, 8), header.get_lump(buf, 9), &res.textures)?;
+                let brushes = BrushesLump::from_lump(header.get_lump(buf, 8), header.get_lump(buf, 9), &res.textures, &res.planes)?;
                 // And moved into the *existing* struct
                 unsafe {
                     let mut_ref = Pin::as_mut(&mut res);

@@ -15,7 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
+use bsp::types::Vector3;
 use bsp::lumps::brushes::BrushesLump;
+use bsp::lumps::planes::{PlanesLump, Plane};
 use bsp::lumps::textures::{ContentsFlags, SurfaceFlags, Texture, TexturesLump};
 
 #[test]
@@ -46,13 +48,33 @@ fn test_brushes() {
         .into_boxed_slice(),
     };
 
-    let parsed = BrushesLump::from_lump(brushes, sides, &textures).unwrap();
+    let planes = PlanesLump {
+        planes: vec![
+            Plane {
+                normal: Vector3::zero(),
+                dist: 1.0,
+                complement_normal: Vector3::zero()
+            },
+            Plane {
+                normal: Vector3::zero(),
+                dist: 2.0,
+                complement_normal: Vector3::zero()
+            },
+            Plane {
+                normal: Vector3::zero(),
+                dist: 3.0,
+                complement_normal: Vector3::zero()
+            }
+        ].into_boxed_slice()
+    };
+
+    let parsed = BrushesLump::from_lump(brushes, sides, &textures, &planes).unwrap();
 
     assert_eq!(*parsed.brushes[0].texture, textures.textures[0]);
     assert_eq!(parsed.brushes[0].sides.len(), 1);
 
     assert_eq!(*parsed.brushes[1].texture, textures.textures[1]);
-    assert_eq!(parsed.brushes[1].sides.len(), 3);
+    assert_eq!(parsed.brushes[1].sides.len(), 2);
 
     assert_eq!(*parsed.brushes[2].texture, textures.textures[2]);
     assert_eq!(parsed.brushes[2].sides.len(), 0);

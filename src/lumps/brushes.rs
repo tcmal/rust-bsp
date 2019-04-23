@@ -23,6 +23,7 @@ const BRUSH_SIZE: usize = (4 * 3);
 /// The size of one brushsize record
 const SIDE_SIZE: usize = (4 * 2);
 
+use crate::lumps::planes::{PlanesLump, Plane};
 use crate::lumps::textures::{Texture, TexturesLump};
 use crate::lumps::helpers::slice_to_i32;
 use crate::types::{Result, Error, TransparentNonNull};
@@ -36,7 +37,7 @@ pub struct BrushesLump<'a> {
 
 impl<'a> BrushesLump<'a> {
     /// Parse the brushes & brushsides lump from a bsp file.
-    pub fn from_lump(brushes_lump: &'a [u8], brush_sides_lump: &'a [u8], textures_lump: &TexturesLump<'a>) -> Result<'static, BrushesLump<'a>> {
+    pub fn from_lump(brushes_lump: &'a [u8], brush_sides_lump: &'a [u8], textures_lump: &TexturesLump<'a>, planes_lump: &PlanesLump) -> Result<'a, BrushesLump<'a>> {
         
         if brushes_lump.len() % BRUSH_SIZE != 0 || brush_sides_lump.len() % SIDE_SIZE != 0 {
             return Err(Error::BadFormat);
@@ -54,7 +55,7 @@ impl<'a> BrushesLump<'a> {
             }
 
             brushes.push(Brush {
-                sides: BrushesLump::get_sides(brush_sides_lump, slice_to_i32(&brush[0..4]), slice_to_i32(&brush[4..8])),
+                sides: BrushesLump::get_sides(brush_sides_lump, slice_to_i32(&brush[0..4]), slice_to_i32(&brush[4..8]), textures_lump, planes_lump)?,
                 texture: (&textures_lump.textures[texture_index]).into()
             });
         }
@@ -63,7 +64,7 @@ impl<'a> BrushesLump<'a> {
     }
 
     /// Internal function to get the relevant brushsides for a brush from the data in the brush lump.
-    fn get_sides(brush_sides_lump: &[u8], start: i32, length: i32) -> Box<[BrushSide]> {
+    fn get_sides(brush_sides_lump: &[u8], start: i32, length: i32, textures_lump: &TexturesLump<'a>, planes_lump: &PlanesLump) -> Result<'a, Box<[BrushSide<'a>]>> {
         let mut sides = Vec::with_capacity(length as usize);
 
         if length > 0 {
@@ -71,14 +72,26 @@ impl<'a> BrushesLump<'a> {
                 let offset = n as usize * SIDE_SIZE;
                 let brush = &brush_sides_lump[offset..offset + SIDE_SIZE];
 
+                let plane = slice_to_i32(&brush[0..4]) as usize;
+                if plane >= planes_lump.planes.len() {
+                    return Err(Error::BadRef { loc: "Brush.Side.Plane", val: plane })
+                }
+                let plane = (&planes_lump.planes[plane]).into();
+
+                let texture = slice_to_i32(&brush[4..8]) as usize;
+                if texture >= textures_lump.textures.len() {
+                    return Err(Error::BadRef { loc: "Brush.Side.Texture", val: texture })
+                }
+                let texture = (&textures_lump.textures[texture]).into();
+
                 sides.push(BrushSide {
-                    plane: slice_to_i32(&brush[0..4]),
-                    texture: slice_to_i32(&brush[4..8])
+                    plane: plane,
+                    texture: texture
                 });
             }
         }
 
-        sides.into_boxed_slice()
+        Ok(sides.into_boxed_slice())
     }
 
     /// Helper function to get an empty brushes lump. 
@@ -92,13 +105,13 @@ impl<'a> BrushesLump<'a> {
 /// "Each brush describes a convex volume as defined by its surrounding surfaces."
 #[derive(Debug, Clone, PartialEq)]
 pub struct Brush<'a> {
-    pub sides: Box<[BrushSide]>,
+    pub sides: Box<[BrushSide<'a>]>,
     pub texture: TransparentNonNull<Texture<'a>>
 }
 
 /// Bounding surfacce for brush.
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct BrushSide {
-    pub plane: i32, // TODO
-    pub texture: i32
+#[derive(Debug, Clone, PartialEq)]
+pub struct BrushSide<'a> {
+    pub plane: TransparentNonNull<Plane>,
+    pub texture: TransparentNonNull<Texture<'a>>
 }
