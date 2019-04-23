@@ -37,3 +37,4 @@ pub use lightvols::LightVolsLump;pub use planes::PlanesLump;
 pub use textures::TexturesLump;
 pub use tree::BSPTree;
 pub use vertices::{MeshVertsLump, VerticesLump};
+pub use faces::FaceLump;

@@ -26,7 +26,7 @@ pub mod types;
 use std::pin::Pin;
 
 use directory::Header;
-use lumps::{BrushesLump, EntitiesLump, LightVolsLump, PlanesLump, TexturesLump, VerticesLump, MeshVertsLump, LightmapsLump};
+use lumps::{BrushesLump, EntitiesLump, LightVolsLump, PlanesLump, TexturesLump, VerticesLump, MeshVertsLump, LightmapsLump, FaceLump, EffectsLump, BSPTree};
 use types::{Error, Result};
 
 /// Represents a parsed BSP file.
@@ -41,6 +41,9 @@ pub struct BSPFile<'a> {
     pub vertices: VerticesLump,
     pub meshverts: MeshVertsLump,
     pub lightmaps: LightmapsLump,
+    pub effects: EffectsLump<'a>,
+    pub faces: FaceLump<'a>,
+    pub tree: BSPTree<'a>
 }
 
 impl<'a> BSPFile<'a> {
@@ -66,7 +69,7 @@ impl<'a> BSPFile<'a> {
                 let lightmaps = LightmapsLump::from_lump(header.get_lump(buf, 14))?;
                 let lightvols = LightVolsLump::from_lump(header.get_lump(buf, 15))?;
 
-                let res = Box::pin(BSPFile {
+                let mut res = Box::pin(BSPFile {
                     directory: header,
                     entities,
                     textures,
@@ -75,8 +78,43 @@ impl<'a> BSPFile<'a> {
                     lightmaps,
                     meshverts,
                     vertices,
-                    brushes: BrushesLump::empty()
+                    effects: EffectsLump::empty(),
+                    brushes: BrushesLump::empty(),
+                    faces: FaceLump::empty(),
+                    tree: BSPTree::empty()
                 });
+
+                // Then the next level is constructed
+                let brushes = BrushesLump::from_lump(header.get_lump(buf, 8), header.get_lump(buf, 9), &res.textures)?;
+                // And moved into the *existing* struct
+                unsafe {
+                    let mut_ref = Pin::as_mut(&mut res);
+                    Pin::get_unchecked_mut(mut_ref).brushes = brushes;
+                }
+                
+                // ---
+                let effects = EffectsLump::from_lump(header.get_lump(buf, 12), &res.brushes)?;
+
+                unsafe {
+                    let mut_ref = Pin::as_mut(&mut res);
+                    Pin::get_unchecked_mut(mut_ref).effects = effects;
+                }
+
+                // ---
+                let faces = FaceLump::from_lump(header.get_lump(buf, 13), &res.textures, &res.effects, &res.vertices, &res.meshverts, &res.lightmaps)?;
+                
+                unsafe {
+                    let mut_ref = Pin::as_mut(&mut res);
+                    Pin::get_unchecked_mut(mut_ref).faces = faces;
+                }
+
+                // ---
+                let tree = BSPTree::from_lumps(header.get_lump(buf, 3), header.get_lump(buf, 4), &res.faces, &res.brushes)?;
+
+                unsafe {
+                    let mut_ref = Pin::as_mut(&mut res);
+                    Pin::get_unchecked_mut(mut_ref).tree = tree;
+                }
 
                 Ok(res)
             }

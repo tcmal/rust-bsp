@@ -21,7 +21,7 @@ use super::helpers::slice_to_i32;
 use super::lightmaps::{Lightmap, LightmapsLump};
 use super::textures::{Texture, TexturesLump};
 use super::vertices::{MeshVert, MeshVertsLump, Vertex, VerticesLump};
-use crate::types::{Error, IVector2, Result, Vector3};
+use crate::types::{Error, IVector2, Result, Vector3, TransparentNonNull};
 const FACE_SIZE: usize = (4 * 8) + (4 * 2) + (4 * 2) + (4 * 3) + ((4 * 2) * 3) + (4 * 3) + (4 * 2);
 
 #[derive(Debug, Clone, Copy)]
@@ -35,12 +35,12 @@ pub enum FaceType {
 
 #[derive(Debug, Clone)]
 pub struct Face<'a> {
-    pub tex: &'a Texture<'a>,
-    pub effect: Option<&'a Effect<'a>>,
+    pub tex: TransparentNonNull<Texture<'a>>,
+    pub effect: Option<TransparentNonNull<Effect<'a>>>,
     pub face_type: FaceType,
-    pub vertices: Box<[&'a Vertex]>,
-    pub meshverts: Box<[&'a MeshVert]>,
-    pub lightmap: Option<&'a Lightmap>,
+    pub vertices: Box<[TransparentNonNull<Vertex>]>,
+    pub meshverts: Box<[TransparentNonNull<MeshVert>]>,
+    pub lightmap: Option<TransparentNonNull<Lightmap>>,
     pub map_start: IVector2,
     pub map_size: IVector2,
     pub map_origin: Vector3,
@@ -52,11 +52,11 @@ pub struct Face<'a> {
 impl<'a> Face<'a> {
     pub fn from_slice(
         data: &'a [u8],
-        textures: &'a TexturesLump,
-        effects: &'a EffectsLump,
-        vertices_lump: &'a VerticesLump,
-        meshverts_lump: &'a MeshVertsLump,
-        lightmaps: &'a LightmapsLump,
+        textures: &TexturesLump<'a>,
+        effects: &EffectsLump<'a>,
+        vertices_lump: &VerticesLump,
+        meshverts_lump: &MeshVertsLump,
+        lightmaps: &LightmapsLump,
     ) -> Result<'a, Face<'a>> {
         if data.len() != FACE_SIZE {
             panic!("tried to call face.from_slice with invalid slice size");
@@ -70,7 +70,7 @@ impl<'a> Face<'a> {
                 val: tex_id,
             });
         }
-        let tex = &textures.textures[tex_id];
+        let tex = (&textures.textures[tex_id]).into();
 
         // effects
         let effect_id = slice_to_i32(&data[4..8]) as usize;
@@ -82,7 +82,7 @@ impl<'a> Face<'a> {
                     val: effect_id,
                 });
             }
-            effect = Some(&effects.effects[effect_id]);
+            effect = Some((&effects.effects[effect_id]).into());
         }
 
 
@@ -102,7 +102,7 @@ impl<'a> Face<'a> {
 
         let mut vertices = Vec::with_capacity(vertex_n);
         for i in vertex_offset..vertex_offset + vertex_n {
-            vertices.push(&vertices_lump.vertices[i]);
+            vertices.push((&vertices_lump.vertices[i]).into());
         }
 
         let vertices = vertices.into_boxed_slice();
@@ -120,7 +120,7 @@ impl<'a> Face<'a> {
 
         let mut meshverts = Vec::with_capacity(meshverts_n);
         for i in meshverts_offset..meshverts_offset + meshverts_n {
-            meshverts.push(&meshverts_lump.meshverts[i]);
+            meshverts.push((&meshverts_lump.meshverts[i]).into());
         }
 
         let meshverts = meshverts.into_boxed_slice();
@@ -135,7 +135,7 @@ impl<'a> Face<'a> {
                     val: lightmap_id,
                 });
             }
-            lightmap = Some(&lightmaps.maps[lightmap_id]);
+            lightmap = Some((&lightmaps.maps[lightmap_id]).into());
         }
 
         // map properties
@@ -179,11 +179,11 @@ pub struct FaceLump<'a> {
 impl<'a> FaceLump<'a> {
     pub fn from_lump(
         data: &'a [u8],
-        textures: &'a TexturesLump,
-        effects: &'a EffectsLump,
-        vertices_lump: &'a VerticesLump,
-        meshverts_lump: &'a MeshVertsLump,
-        lightmaps: &'a LightmapsLump,
+        textures: &TexturesLump<'a>,
+        effects: &EffectsLump<'a>,
+        vertices_lump: &VerticesLump,
+        meshverts_lump: &MeshVertsLump,
+        lightmaps: &LightmapsLump,
     ) -> Result<'a, FaceLump<'a>> {
         if data.len() % FACE_SIZE != 0 {
             return Err(Error::BadFormat);
@@ -205,5 +205,9 @@ impl<'a> FaceLump<'a> {
         Ok(FaceLump {
             faces: faces.into_boxed_slice(),
         })
+    }
+
+    pub fn empty() -> FaceLump<'static> {
+        FaceLump { faces: vec![].into_boxed_slice() }
     }
 }

@@ -17,7 +17,7 @@
 
 use std::str;
 
-use crate::types::{Error, Result};
+use crate::types::{Error, Result, TransparentNonNull};
 use super::brushes::{BrushesLump, Brush};
 use super::helpers::slice_to_i32;
 
@@ -31,7 +31,7 @@ pub struct Effect<'a> {
     pub name: &'a str,
 
     /// The brush used for this effect
-    pub brush: &'a Brush<'a>
+    pub brush: TransparentNonNull<Brush<'a>>
     
     // todo: unknown: i32
 }
@@ -45,7 +45,7 @@ pub struct EffectsLump<'a> {
 
 impl<'a> EffectsLump<'a> {
     /// Parses the given lump and links the brush references to the given `BrushesLump`
-    pub fn from_lump(lump: &'a [u8], brushes: &'a BrushesLump) -> Result<'a, EffectsLump<'a>> {
+    pub fn from_lump(lump: &'a [u8], brushes: &BrushesLump<'a>) -> Result<'a, EffectsLump<'a>> {
         if lump.len() % EFFECT_SIZE != 0 {
             return Err(Error::BadFormat);
         }
@@ -59,10 +59,14 @@ impl<'a> EffectsLump<'a> {
             let brush_id = slice_to_i32(&raw[64..68]) as usize;
             effects.push(Effect {
                 name: str::from_utf8(&raw[..64]).unwrap(),
-                brush: &brushes.brushes[brush_id]
+                brush: (&brushes.brushes[brush_id]).into()
             });
         }
 
         Ok(EffectsLump { effects: effects.into_boxed_slice() })
+    }
+
+    pub fn empty() -> EffectsLump<'static> {
+        EffectsLump { effects: vec![].into_boxed_slice() }
     }
 }
