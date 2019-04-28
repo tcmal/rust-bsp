@@ -26,7 +26,7 @@ pub mod types;
 use std::pin::Pin;
 
 use directory::Header;
-use lumps::{BrushesLump, EntitiesLump, LightVolsLump, PlanesLump, TexturesLump, VerticesLump, MeshVertsLump, LightmapsLump, FaceLump, EffectsLump, BSPTree, VisDataLump};
+use lumps::{BrushesLump, EntitiesLump, LightVolsLump, PlanesLump, TexturesLump, VerticesLump, MeshVertsLump, LightmapsLump, FaceLump, EffectsLump, BSPTree, VisDataLump, ModelsLump};
 use types::{Error, Result};
 
 /// Represents a parsed BSP file.
@@ -44,7 +44,8 @@ pub struct BSPFile<'a> {
     pub effects: EffectsLump<'a>,
     pub faces: FaceLump<'a>,
     pub tree: BSPTree<'a>,
-    pub visdata: VisDataLump
+    pub visdata: VisDataLump,
+    pub models: ModelsLump<'a>
 }
 
 impl<'a> BSPFile<'a> {
@@ -85,7 +86,8 @@ impl<'a> BSPFile<'a> {
                     brushes: BrushesLump::empty(),
                     faces: FaceLump::empty(),
                     tree: BSPTree::empty(),
-                    visdata
+                    visdata,
+                    models: ModelsLump::empty()
                 });
 
                 // Then the next level is constructed
@@ -114,10 +116,13 @@ impl<'a> BSPFile<'a> {
 
                 // ---
                 let tree = BSPTree::from_lumps(header.get_lump(buf, 3), header.get_lump(buf, 4), &res.faces, &res.brushes)?;
+                let models = ModelsLump::from_lump(header.get_lump(buf, 7), &res.faces, &res.brushes)?;
 
                 unsafe {
                     let mut_ref = Pin::as_mut(&mut res);
-                    Pin::get_unchecked_mut(mut_ref).tree = tree;
+                    let unchecked = Pin::get_unchecked_mut(mut_ref);
+                    unchecked.tree = tree;
+                    unchecked.models = models;
                 }
 
                 Ok(res)

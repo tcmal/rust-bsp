@@ -5,9 +5,6 @@ Library for reading `.bsp` files. Currently supports quake 3 bsps. Nightly.
 
 ![BSP File graph](structure.png?raw=true)
 
-# TODO
-    - Models
-
 # Contributing
 
 See [CONTRIBUTING.md](https://github.com/tcmal/rust-bsp/blob/master/CONTRIBUTING.md) for how to contribute.

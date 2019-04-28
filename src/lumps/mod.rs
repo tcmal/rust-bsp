@@ -29,6 +29,7 @@ pub mod textures;
 pub mod tree;
 pub mod vertices;
 pub mod visdata;
+pub mod models;
 
 pub use brushes::BrushesLump;
 pub use effects::EffectsLump;
@@ -40,3 +41,4 @@ pub use tree::BSPTree;
 pub use vertices::{MeshVertsLump, VerticesLump};
 pub use faces::FaceLump;
 pub use visdata::VisDataLump;
+pub use models::ModelsLump;

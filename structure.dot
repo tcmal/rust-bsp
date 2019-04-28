@@ -24,5 +24,4 @@ digraph G {
     Effect [ style = filled, fillcolor = orange ]
     Face [ style = filled, fillcolor = orangered ]
     BSPLeaf, BSPNode, BSPTree, Model [ style = filled, fillcolor = red ]
-    Model [ style = dashed ]
 }

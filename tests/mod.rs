@@ -23,3 +23,4 @@ mod effects;
 mod vertices;
 mod lightmaps;
 mod visdata;
+mod models;

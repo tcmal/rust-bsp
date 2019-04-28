@@ -23,3 +23,4 @@ node scripts/compile_hex.js tests/vertices/test_vertices.hex
 node scripts/compile_hex.js tests/vertices/test_meshvertices.hex
 node scripts/compile_hex.js tests/lightmaps/test_lightmaps.hex
 node scripts/compile_hex.js tests/visdata/test_visdata.hex
+node scripts/compile_hex.js tests/models/test_models.hex
