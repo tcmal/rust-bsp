@@ -78,7 +78,7 @@ impl<'a> BSPTree<'a> {
             let brushes = brushes.into_boxed_slice();
 
             let leaf = BSPLeaf {
-                cluster: slice_to_i32(&raw[0..4]),
+                cluster_id: slice_to_i32(&raw[0..4]),
                 area: slice_to_i32(&raw[4..8]),
                 // 8..20 = min
                 // 20..32 = max
