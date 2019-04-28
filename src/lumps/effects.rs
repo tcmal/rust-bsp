@@ -25,7 +25,7 @@ use super::helpers::slice_to_i32;
 const EFFECT_SIZE: usize = 64 + 4 + 4;
 
 /// One effect definition
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Effect<'a> {
     /// The name of the effect - always 64 characters long
     pub name: &'a str,

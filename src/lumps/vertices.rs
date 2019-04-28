@@ -23,7 +23,7 @@ use std::convert::TryInto;
 const VERTEX_SIZE: usize = (4 * 3) + (2 * 2 * 4) + (4 * 3) + 4;
 
 /// A vertex, used to describe a face.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vertex {
     pub position: Vector3,
     pub tex: TexCoord,

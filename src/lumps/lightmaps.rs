@@ -30,6 +30,19 @@ pub struct Lightmap {
     pub map: [[RGB; 128]; 128],
 }
 
+impl PartialEq for Lightmap {
+    fn eq(&self, other: &Lightmap) -> bool {
+        for x in 0..128 {
+            for y in 0..128 {
+                if self.map[x][y] != other.map[x][y] {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+}
+
 impl fmt::Debug for Lightmap {
     // rust doesn't implement debug for 3d arrays so done manually
     // \_( )_/

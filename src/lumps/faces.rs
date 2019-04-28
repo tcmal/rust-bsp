@@ -24,7 +24,7 @@ use super::vertices::{MeshVert, MeshVertsLump, Vertex, VerticesLump};
 use crate::types::{Error, IVector2, Result, Vector3, TransparentNonNull};
 const FACE_SIZE: usize = (4 * 8) + (4 * 2) + (4 * 2) + (4 * 3) + ((4 * 2) * 3) + (4 * 3) + (4 * 2);
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(i32)]
 pub enum FaceType {
     Polygon = 1,
@@ -33,7 +33,7 @@ pub enum FaceType {
     Billboard = 4,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Face<'a> {
     pub tex: TransparentNonNull<Texture<'a>>,
     pub effect: Option<TransparentNonNull<Effect<'a>>>,
