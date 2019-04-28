@@ -22,3 +22,4 @@ mod brushes;
 mod effects;
 mod vertices;
 mod lightmaps;
+mod visdata;

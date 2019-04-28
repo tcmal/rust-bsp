@@ -26,7 +26,7 @@ pub mod types;
 use std::pin::Pin;
 
 use directory::Header;
-use lumps::{BrushesLump, EntitiesLump, LightVolsLump, PlanesLump, TexturesLump, VerticesLump, MeshVertsLump, LightmapsLump, FaceLump, EffectsLump, BSPTree};
+use lumps::{BrushesLump, EntitiesLump, LightVolsLump, PlanesLump, TexturesLump, VerticesLump, MeshVertsLump, LightmapsLump, FaceLump, EffectsLump, BSPTree, VisDataLump};
 use types::{Error, Result};
 
 /// Represents a parsed BSP file.
@@ -43,7 +43,8 @@ pub struct BSPFile<'a> {
     pub lightmaps: LightmapsLump,
     pub effects: EffectsLump<'a>,
     pub faces: FaceLump<'a>,
-    pub tree: BSPTree<'a>
+    pub tree: BSPTree<'a>,
+    pub visdata: VisDataLump
 }
 
 impl<'a> BSPFile<'a> {
@@ -69,6 +70,8 @@ impl<'a> BSPFile<'a> {
                 let lightmaps = LightmapsLump::from_lump(header.get_lump(buf, 14))?;
                 let lightvols = LightVolsLump::from_lump(header.get_lump(buf, 15))?;
 
+                let visdata = VisDataLump::from_lump(header.get_lump(buf, 16))?;
+
                 let mut res = Box::pin(BSPFile {
                     directory: header,
                     entities,
@@ -81,7 +84,8 @@ impl<'a> BSPFile<'a> {
                     effects: EffectsLump::empty(),
                     brushes: BrushesLump::empty(),
                     faces: FaceLump::empty(),
-                    tree: BSPTree::empty()
+                    tree: BSPTree::empty(),
+                    visdata
                 });
 
                 // Then the next level is constructed
