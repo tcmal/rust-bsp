@@ -5,6 +5,7 @@ digraph G {
     "BrushSide" -> "Texture"
     "Effect" -> "Brush"
     "Entity"
+    "LightVol"
     "Face" -> "Texture"
     "Face" -> "Effect"
     "Face" -> "Vertex"
@@ -14,14 +15,14 @@ digraph G {
     "BSPNode" -> "BSPLeaf"
     "BSPLeaf" -> "Face"
     "BSPLeaf" -> "Brush"
-    "BSPLeaf" -> "LightVol"
+    "BSPLeaf" -> "VisData"
     "Model" -> "Face"
     "Model" -> "Brush"
 
-    Entity, Texture, Plane, Vertex, MeshVert, Lightmap, LightVol [ style=filled, fillcolor = green ]
+    Entity, Texture, Plane, Vertex, MeshVert, Lightmap, LightVol, VisData [ style=filled, fillcolor = green ]
     Brush, BrushSide [ style = filled, fillcolor = yellow ]
     Effect [ style = filled, fillcolor = orange ]
     Face [ style = filled, fillcolor = orangered ]
     BSPLeaf, BSPNode, BSPTree, Model [ style = filled, fillcolor = red ]
-    LightVol, Model [ style = dashed ]
+    Model [ style = dashed ]
 }

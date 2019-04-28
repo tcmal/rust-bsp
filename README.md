@@ -7,7 +7,6 @@ Library for reading `.bsp` files. Currently supports quake 3 bsps. Nightly.
 
 # TODO
     - Models
-    - VisData
 
 # Contributing
 
