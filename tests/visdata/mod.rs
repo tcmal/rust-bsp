@@ -24,19 +24,16 @@ fn test_visdata() {
     let lump = VisDataLump::from_lump(data).unwrap();
 
     assert_eq!(lump.vecs.len(), 3);
-    assert_eq!(lump.vecs[0].len(), 10);
+    assert_eq!(lump.vecs[0].len(), 8);
 
     // first vec is all true
-    for n in 0..10 {
-        assert_eq!(lump.vecs[0][n], true);
-    }
+    assert!(lump.vecs[0].all());
 
     // second vec is all false
-    for n in 0..10 {
-        assert_eq!(lump.vecs[1][n], false);
-    }
+    assert!(lump.vecs[1].none());
+
     // third alternates
-    for n in 0..10 {
+    for n in 0..8 {
         assert_eq!(lump.vecs[2][n], n % 2 == 0);
     }
 }

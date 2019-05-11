@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
+use bit_vec::BitVec;
+
 use super::helpers::slice_to_i32;
 use crate::types::{Error, Result};
 
@@ -23,8 +25,8 @@ use crate::types::{Error, Result};
 pub struct VisDataLump {
     /// Each vector is an array of bools which states if that cluster is visible for this.
     /// For example, if vecs[x][y] == true, then they are visible.
-    /// Every slice inside the first slice has the same length.
-    pub vecs: Box<[Box<[bool]>]>,
+    /// Every BitVec has the same length.
+    pub vecs: Box<[BitVec]>,
 }
 impl VisDataLump {
     pub fn from_lump(data: &[u8]) -> Result<VisDataLump> {
@@ -39,19 +41,7 @@ impl VisDataLump {
         for n in 0..n_vecs {
             let offset = 8 + (n * size_vecs);
             let slice = &data[offset..offset + size_vecs];
-
-            let mut data = Vec::with_capacity(size_vecs);
-            for x in 0..size_vecs {
-                if slice[x] == 1 {
-                    data.push(true);
-                } else if slice[x] == 0 {
-                    data.push(false);
-                } else {
-                    return Err(Error::BadFormat);
-                }
-            }
-
-            vecs.push(data.into_boxed_slice());
+            vecs.push(BitVec::from_bytes(slice));
         }
 
         Ok(VisDataLump {

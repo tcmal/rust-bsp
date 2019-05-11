@@ -18,6 +18,7 @@
 
 #[macro_use]
 extern crate bitflags;
+extern crate bit_vec;
 
 pub mod directory;
 pub mod lumps;

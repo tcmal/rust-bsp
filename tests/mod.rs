@@ -26,4 +26,3 @@ mod vertices;
 mod lightmaps;
 mod visdata;
 mod models;
-mod integration;

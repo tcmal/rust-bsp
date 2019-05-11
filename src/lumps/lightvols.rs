@@ -19,7 +19,7 @@ use std::convert::TryInto;
 
 use crate::types::{Result, Error, RGB};
 
-const VOL_LENGTH: usize = (4 * 3 * 2) + 2;
+const VOL_LENGTH: usize = (3 * 2) + 2;
 
 #[derive(Debug, Clone, Copy)]
 pub struct LightVol {
