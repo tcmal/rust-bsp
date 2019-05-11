@@ -17,6 +17,8 @@
 
 #[cfg(test)]
 
+extern crate bsp;
+
 mod tree;
 mod brushes;
 mod effects;

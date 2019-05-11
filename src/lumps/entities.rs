@@ -49,7 +49,7 @@ enum ParseState {
 impl<'a> EntitiesLump<'a> {
     /// Parse the given lump as an Entities Lump.
     pub fn from_lump(lump: &'a [u8]) -> Result<EntitiesLump<'a>> {
-        use ParseState::*;
+        use self::ParseState::*;
 
         let string = str::from_utf8(lump).unwrap();
         

@@ -1,8 +1,18 @@
 [package]
 name = "bsp"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Oscar <oscar.shrimpton.personal@gmail.com>"]
-edition = "2018"
+description = "Library for parsing Q3 .bsp files."
+repository = "https://github.com/tcmal/rust-bsp"
+homepage = "https://github.com/tcmal/rust-bsp"
+readme = "README.md"
+keywords = ["gameengines", "3d", "quake", "stockton"]
+categories = ["game-engines"]
+license = "GPLv3"
+
+[badges]
+travis-ci = { repository = "tcmal/rust-bsp", branch = "master" }
+maintenance = {status = "passively-maintained"}
 
 [dependencies]
 bitflags = "1.0"
