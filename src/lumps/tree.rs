@@ -17,10 +17,11 @@
 
 //! Parses the BSP tree into a usable format
 
-use crate::types::{Error, Result, IVector3, TransparentNonNull};
+use crate::types::{Error, Result, TransparentNonNull};
 use super::faces::{Face, FaceLump};
 use super::brushes::{Brush, BrushesLump};
-use crate::lumps::helpers::slice_to_i32;
+use crate::lumps::helpers::{slice_to_i32, slice_to_vec3i};
+use na::Vector3;
 
 const NODE_SIZE: usize = 4 + (4 * 2) + (4 * 3) + (4 * 3);
 const LEAF_SIZE: usize = 4 * 6 + (4 * 3 * 2);
@@ -98,8 +99,8 @@ impl<'a> BSPTree<'a> {
 
             Ok(BSPNode {
                 children: None,
-                min: IVector3::from_slice(&raw[8..20]),
-                max: IVector3::from_slice(&raw[20..32]),
+                min: slice_to_vec3i(&raw[8..20]),
+                max: slice_to_vec3i(&raw[20..32]),
                 leaf: Some(leaf)
             })
         } else {
@@ -109,8 +110,8 @@ impl<'a> BSPTree<'a> {
             // 0..4 = i
             let child_one = BSPTree::compile_node(slice_to_i32(&raw[4..8]), nodes, leaves, leaf_faces, leaf_brushes, faces_lump, brushes_lump)?;
             let child_two = BSPTree::compile_node(slice_to_i32(&raw[8..12]), nodes, leaves, leaf_faces, leaf_brushes, faces_lump, brushes_lump)?;
-            let min = IVector3::from_slice(&raw[12..24]);
-            let max = IVector3::from_slice(&raw[24..36]);
+            let min = slice_to_vec3i(&raw[12..24]);
+            let max = slice_to_vec3i(&raw[24..36]);
 
             Ok(BSPNode {
                 children: Some(Box::new([child_one, child_two])),
@@ -124,8 +125,8 @@ impl<'a> BSPTree<'a> {
         BSPTree {
             root: BSPNode {
                 children: None,
-                min: IVector3::zero(),
-                max: IVector3::zero(),
+                min: Vector3::new(0, 0, 0),
+                max: Vector3::new(0, 0, 0),
                 leaf: None
             }
         }
@@ -137,8 +138,8 @@ impl<'a> BSPTree<'a> {
 #[derive(Debug, Clone)]
 pub struct BSPNode<'a> {
     pub children: Option<Box<[BSPNode<'a>; 2]>>,
-    pub min: IVector3,
-    pub max: IVector3,
+    pub min: Vector3<i32>,
+    pub max: Vector3<i32>,
     pub leaf: Option<BSPLeaf<'a>>
 }
 

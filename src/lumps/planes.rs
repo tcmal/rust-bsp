@@ -19,8 +19,10 @@
 
 const PLANE_SIZE: usize = (4 * 3) + 4;
 
-use crate::types::{Result, Error, Vector3};
-use super::helpers::slice_to_f32;
+use crate::types::{Result, Error};
+use super::helpers::{slice_to_f32, slice_to_vec3};
+
+use na::Vector3;
 
 /// The planes lump from a BSP file.
 /// Found at lump index 2 in a q3 bsp.
@@ -46,9 +48,9 @@ impl PlanesLump {
             let offset = n * PLANE_SIZE;
             let plane = &lump[offset..offset + (PLANE_SIZE * 2)];
             planes.push(Plane {
-                normal: Vector3::from_slice(&plane[0..12]),
+                normal: slice_to_vec3(&plane[0..12]),
                 dist: slice_to_f32(&plane[12..16]),
-                complement_normal: Vector3::from_slice(&plane[16..28])
+                complement_normal: slice_to_vec3(&plane[16..28])
             });
 
             n += 2;
@@ -62,14 +64,14 @@ impl PlanesLump {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Plane {
     /// Plane normal
-    pub normal: Vector3,
+    pub normal: Vector3<f32>,
 
     /// Distance from origin to plane along normal
     pub dist: f32,
     
     /// Opposing normal from coincident plane
     /// This comes from the next plane in the lump.
-    pub complement_normal: Vector3
+    pub complement_normal: Vector3<f32>
 }
 
 #[test]

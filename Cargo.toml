@@ -17,3 +17,4 @@ maintenance = {status = "passively-maintained"}
 [dependencies]
 bitflags = "1.0"
 bit-vec = "0.5.1"
+nalgebra = "0.18.0"

@@ -18,6 +18,7 @@
 //! Helper functions for parsing
 
 use std::convert::TryInto;
+use na::{Vector3, Vector2};
 
 /// Turn a slice into a le i32, the int datatype in a bsp file.
 /// # Panics
@@ -46,4 +47,38 @@ pub fn slice_to_f32(slice: &[u8]) -> f32 {
     f32::from_bits(u32::from_le_bytes(
         slice.try_into().unwrap()
     ))
+}
+
+/// Turn a slice of floats into a 3D vector
+/// # Panics
+/// If slice isn't 12 bytes long.
+pub fn slice_to_vec3(slice: &[u8]) -> Vector3<f32> {
+    Vector3::new(slice_to_f32(&slice[0..4]),
+                 slice_to_f32(&slice[4..8]),
+                 slice_to_f32(&slice[8..12]))
+}
+
+/// Turn a slice of i32s into a 3D vector
+/// # Panics
+/// If slice isn't 12 bytes long.
+pub fn slice_to_vec3i(slice: &[u8]) -> Vector3<i32> {
+    Vector3::new(slice_to_i32(&slice[0..4]),
+                 slice_to_i32(&slice[4..8]),
+                 slice_to_i32(&slice[8..12]))
+}
+
+/// Turn a slice of floats into a 2D vector
+/// # Panics
+/// If slice isn't 8 bytes long.
+pub fn slice_to_vec2(slice: &[u8]) -> Vector2<f32> {
+    Vector2::new(slice_to_f32(&slice[0..4]),
+                 slice_to_f32(&slice[4..8]))
+}
+
+/// Turn a slice of i32s into a 2D vector
+/// # Panics
+/// If slice isn't 8 bytes long.
+pub fn slice_to_vec2i(slice: &[u8]) -> Vector2<i32> {
+    Vector2::new(slice_to_i32(&slice[0..4]),
+                 slice_to_i32(&slice[4..8]))
 }

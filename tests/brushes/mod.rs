@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-use stockton_bsp::types::Vector3;
+use na::Vector3;
 use stockton_bsp::lumps::brushes::BrushesLump;
 use stockton_bsp::lumps::planes::{PlanesLump, Plane};
 use stockton_bsp::lumps::textures::{ContentsFlags, SurfaceFlags, Texture, TexturesLump};
@@ -51,19 +51,19 @@ fn test_brushes() {
     let planes = PlanesLump {
         planes: vec![
             Plane {
-                normal: Vector3::zero(),
+                normal: Vector3::new(0.0, 0.0, 0.0),
                 dist: 1.0,
-                complement_normal: Vector3::zero()
+                complement_normal: Vector3::new(0.0, 0.0, 0.0)
             },
             Plane {
-                normal: Vector3::zero(),
+                normal: Vector3::new(0.0, 0.0, 0.0),
                 dist: 2.0,
-                complement_normal: Vector3::zero()
+                complement_normal: Vector3::new(0.0, 0.0, 0.0)
             },
             Plane {
-                normal: Vector3::zero(),
+                normal: Vector3::new(0.0, 0.0, 0.0),
                 dist: 3.0,
-                complement_normal: Vector3::zero()
+                complement_normal: Vector3::new(0.0, 0.0, 0.0)
             }
         ].into_boxed_slice()
     };

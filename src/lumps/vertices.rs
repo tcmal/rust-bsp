@@ -15,8 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::types::{Vector3, RGBA, Result, Error};
-use super::helpers::{slice_to_i32, slice_to_f32};
+use crate::types::{RGBA, Result, Error};
+use super::helpers::{slice_to_i32, slice_to_f32, slice_to_vec3};
+use na::Vector3;
 use std::convert::TryInto;
 
 /// The size of one vertex
@@ -25,9 +26,9 @@ const VERTEX_SIZE: usize = (4 * 3) + (2 * 2 * 4) + (4 * 3) + 4;
 /// A vertex, used to describe a face.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Vertex {
-    pub position: Vector3,
+    pub position: Vector3<f32>,
     pub tex: TexCoord,
-    pub normal: Vector3,
+    pub normal: Vector3<f32>,
     pub color: RGBA
 }
 
@@ -72,9 +73,9 @@ impl VerticesLump {
             let vertex = &lump[offset..offset + VERTEX_SIZE];
 
             vertices.push(Vertex {
-                position: Vector3::from_slice(&vertex[0..12]),
+                position: slice_to_vec3(&vertex[0..12]),
                 tex: TexCoord::from_bytes(&vertex[12..28].try_into().unwrap()),
-                normal: Vector3::from_slice(&vertex[28..40]),
+                normal: slice_to_vec3(&vertex[28..40]),
                 color: RGBA::from_slice(&vertex[40..44])
             })
         }

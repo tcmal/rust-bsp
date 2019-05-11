@@ -16,7 +16,8 @@
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
 use stockton_bsp::lumps::vertices::{VerticesLump, MeshVertsLump, TexCoord};
-use stockton_bsp::types::{Vector3, RGBA};
+use stockton_bsp::types::{RGBA};
+use na::Vector3;
 
 #[test]
 fn test_vertices() {
@@ -25,9 +26,9 @@ fn test_vertices() {
 
     assert_eq!(parsed.vertices.len(), 1);
     
-    assert_eq!(parsed.vertices[0].position, Vector3::zero());
+    assert_eq!(parsed.vertices[0].position, Vector3::new(0.0, 0.0, 0.0));
     assert_eq!(parsed.vertices[0].tex, TexCoord { u: [1.0, 2.0], v: [3.0, 4.0] });
-    assert_eq!(parsed.vertices[0].normal, Vector3 { x: 5.0, y: 6.0, z: 7.0 });
+    assert_eq!(parsed.vertices[0].normal, Vector3::new(5.0, 6.0, 7.0 ));
     assert_eq!(parsed.vertices[0].color, RGBA { r: 255, g: 255, b: 255, a: 255 });
 }
 

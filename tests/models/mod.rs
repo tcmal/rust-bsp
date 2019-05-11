@@ -18,8 +18,8 @@
 use stockton_bsp::lumps::faces::{FaceLump, Face, FaceType};
 use stockton_bsp::lumps::brushes::{BrushesLump, Brush};
 use stockton_bsp::lumps::textures::{Texture, SurfaceFlags, ContentsFlags};
-use stockton_bsp::types::{IVector2, Vector3};
 use stockton_bsp::lumps::ModelsLump;
+use na::{Vector2, Vector3};
 
 #[test]
 fn test_models() {
@@ -37,12 +37,12 @@ fn test_models() {
                 vertices: vec![].into_boxed_slice(),
                 meshverts: vec![].into_boxed_slice(),
                 lightmap: None,
-                map_start: IVector2::zero(),
-                map_size: IVector2::zero(),
-                map_origin: Vector3::zero(),
-                map_vecs: [Vector3::zero(); 2],
-                normal: Vector3::zero(),
-                size: IVector2::zero()
+                map_start: Vector2::new(0, 0),
+                map_size: Vector2::new(0, 0),
+                map_origin: Vector3::new(0.0, 0.0, 0.0),
+                map_vecs: [Vector3::new(0.0, 0.0, 0.0); 2],
+                normal: Vector3::new(0.0, 0.0, 0.0),
+                size: Vector2::new(0, 0)
             }
         ].into_boxed_slice()
     };
@@ -62,8 +62,8 @@ fn test_models() {
 
     assert_eq!(lump.models.len(), 1);
 
-    assert_eq!(lump.models[0].mins, Vector3 { x: 1.0, y: 2.0, z: 3.0 });
-    assert_eq!(lump.models[0].maxs, Vector3 { x: 4.0, y: 5.0, z: 6.0 });
+    assert_eq!(lump.models[0].mins, Vector3::new(1.0, 2.0, 3.0 ));
+    assert_eq!(lump.models[0].maxs, Vector3::new(4.0, 5.0, 6.0 ));
 
     assert_eq!(lump.models[0].faces.len(), 1);
     assert_eq!(*lump.models[0].faces[0], faces.faces[0]);

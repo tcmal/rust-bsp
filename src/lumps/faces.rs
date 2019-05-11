@@ -17,11 +17,12 @@
 
 
 use super::effects::{Effect, EffectsLump};
-use super::helpers::slice_to_i32;
+use super::helpers::{slice_to_i32, slice_to_vec3, slice_to_vec2i};
 use super::lightmaps::{Lightmap, LightmapsLump};
 use super::textures::{Texture, TexturesLump};
 use super::vertices::{MeshVert, MeshVertsLump, Vertex, VerticesLump};
-use crate::types::{Error, IVector2, Result, Vector3, TransparentNonNull};
+use crate::types::{Error, Result, TransparentNonNull};
+use na::{Vector2, Vector3};
 const FACE_SIZE: usize = (4 * 8) + (4 * 2) + (4 * 2) + (4 * 3) + ((4 * 2) * 3) + (4 * 3) + (4 * 2);
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -41,12 +42,12 @@ pub struct Face<'a> {
     pub vertices: Box<[TransparentNonNull<Vertex>]>,
     pub meshverts: Box<[TransparentNonNull<MeshVert>]>,
     pub lightmap: Option<TransparentNonNull<Lightmap>>,
-    pub map_start: IVector2,
-    pub map_size: IVector2,
-    pub map_origin: Vector3,
-    pub map_vecs: [Vector3; 2],
-    pub normal: Vector3,
-    pub size: IVector2,
+    pub map_start: Vector2<i32>,
+    pub map_size: Vector2<i32>,
+    pub map_origin: Vector3<f32>,
+    pub map_vecs: [Vector3<f32>; 2],
+    pub normal: Vector3<f32>,
+    pub size: Vector2<i32>,
 }
 
 impl<'a> Face<'a> {
@@ -139,20 +140,20 @@ impl<'a> Face<'a> {
         }
 
         // map properties
-        let map_start = IVector2::from_slice(&data[32..40]);
-        let map_size = IVector2::from_slice(&data[40..48]);
-        let map_origin = Vector3::from_slice(&data[48..60]);
+        let map_start = slice_to_vec2i(&data[32..40]);
+        let map_size = slice_to_vec2i(&data[40..48]);
+        let map_origin = slice_to_vec3(&data[48..60]);
 
         // map_vecs
-        let mut map_vecs = [Vector3::zero(); 2];
+        let mut map_vecs = [Vector3::new(0.0, 0.0, 0.0); 2];
         for n in 0..2 {
             let offset = 60 + (n * 3 * 4);
-            map_vecs[n] = Vector3::from_slice(&data[offset..offset + 12]);
+            map_vecs[n] = slice_to_vec3(&data[offset..offset + 12]);
         }
 
         // normal & size
-        let normal = Vector3::from_slice(&data[84..96]);
-        let size = IVector2::from_slice(&data[96..104]);
+        let normal = slice_to_vec3(&data[84..96]);
+        let size = slice_to_vec2i(&data[96..104]);
 
         Ok(Face {
             tex,

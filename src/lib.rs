@@ -19,6 +19,7 @@
 #[macro_use]
 extern crate bitflags;
 extern crate bit_vec;
+extern crate nalgebra as na;
 
 pub mod directory;
 pub mod lumps;

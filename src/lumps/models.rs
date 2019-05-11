@@ -17,15 +17,16 @@
 
 use super::faces::{Face, FaceLump};
 use super::brushes::{Brush, BrushesLump};
-use crate::types::{Vector3, Result, Error, TransparentNonNull};
-use super::helpers::slice_to_i32;
+use crate::types::{Result, Error, TransparentNonNull};
+use super::helpers::{slice_to_i32, slice_to_vec3};
+use na::Vector3;
 
 const MODEL_SIZE: usize = (4 * 3 * 2) + (4 * 4);
 
 #[derive(Debug, Clone)]
 pub struct Model<'a> {
-    pub mins: Vector3,
-    pub maxs: Vector3,
+    pub mins: Vector3<f32>,
+    pub maxs: Vector3<f32>,
     pub faces: Box<[TransparentNonNull<Face<'a>>]>,
     pub brushes: Box<[TransparentNonNull<Brush<'a>>]>
 }
@@ -46,8 +47,8 @@ impl<'a> ModelsLump<'a> {
         for n in 0..n_models {
             let raw = &data[n * MODEL_SIZE..(n + 1) * MODEL_SIZE];
 
-            let mins = Vector3::from_slice(&raw[0..12]);
-            let maxs = Vector3::from_slice(&raw[12..24]);
+            let mins = slice_to_vec3(&raw[0..12]);
+            let maxs = slice_to_vec3(&raw[12..24]);
 
             let first_face = slice_to_i32(&raw[24..28]) as usize;
             let n_faces = slice_to_i32(&raw[28..32]) as usize;

@@ -19,7 +19,7 @@ use stockton_bsp::lumps::BSPTree;
 use stockton_bsp::lumps::brushes::{BrushesLump, Brush};
 use stockton_bsp::lumps::faces::{FaceLump, Face, FaceType};
 use stockton_bsp::lumps::textures::{Texture, SurfaceFlags, ContentsFlags};
-use stockton_bsp::types::{IVector2, Vector3};
+use na::{Vector2, Vector3};
 
 #[test]
 fn test_tree() {
@@ -39,12 +39,12 @@ fn test_tree() {
                 vertices: vec![].into_boxed_slice(),
                 meshverts: vec![].into_boxed_slice(),
                 lightmap: None,
-                map_start: IVector2::zero(),
-                map_size: IVector2::zero(),
-                map_origin: Vector3::zero(),
-                map_vecs: [Vector3::zero(); 2],
-                normal: Vector3::zero(),
-                size: IVector2::zero()
+                map_start: Vector2::new(0, 0),
+                map_size: Vector2::new(0, 0),
+                map_origin: Vector3::new(0.0, 0.0, 0.0),
+                map_vecs: [Vector3::new(0.0, 0.0, 0.0); 2],
+                normal: Vector3::new(0.0, 0.0, 0.0),
+                size: Vector2::new(0, 0)
             }
         ].into_boxed_slice()
     };
@@ -59,9 +59,11 @@ fn test_tree() {
     };
 
     let nodes = &buf[..0x90];
-    let leaves = &buf[0x90..];
+    let leaves = &buf[0x90..0x180];
+    let leaf_faces = &buf[0x180..0x184];
+    let brush_faces = &buf[0x184..0x188];
 
-    let tree = BSPTree::from_lumps(nodes, leaves, &faces, &brushes).unwrap();
+    let tree = BSPTree::from_lumps(nodes, leaves, leaf_faces, brush_faces, &faces, &brushes).unwrap();
 
     //            0
     //     1            2

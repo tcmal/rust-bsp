@@ -18,6 +18,7 @@
 #[cfg(test)]
 
 extern crate stockton_bsp;
+extern crate nalgebra as na;
 
 mod tree;
 mod brushes;
