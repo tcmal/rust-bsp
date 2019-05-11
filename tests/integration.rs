@@ -25,3 +25,18 @@ fn test_basic() {
 
     let _lump = BSPFile::from_buffer(data).unwrap();
 }
+
+#[test]
+fn test_clone() {
+    let data = include_bytes!("./13power.bsp");
+
+    let orig = BSPFile::from_buffer(data).unwrap();
+
+    let clone1 = orig.clone();
+    let clone2 = orig.clone();
+
+    move || {orig};
+
+    assert_eq!(clone1.brushes.brushes[0].texture.name, "textures/gothic_trim/pitted_rust\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}");
+    assert_eq!(clone2.brushes.brushes[0].texture.name, "textures/gothic_trim/pitted_rust\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}");
+}
