@@ -1,19 +1,19 @@
 // Copyright (C) 2019 Oscar Shrimpton
 // 
-// This file is part of stockton-bsp.
+// This file is part of rust_bsp.
 // 
-// stockton-bsp is free software: you can redistribute it and/or modify
+// rust_bsp is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 // 
-// stockton-bsp is distributed in the hope that it will be useful,
+// rust_bsp is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 // 
 // You should have received a copy of the GNU General Public License
-// along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
+// along with rust_bsp.  If not, see <http://www.gnu.org/licenses/>.
 
 //! Parses the BSP tree into a usable format
 
@@ -34,16 +34,16 @@ pub struct BSPTree<'a> {
 
 impl<'a> BSPTree<'a> {
     /// Parses the nodes & leaves lumps into a usable BSP tree.
-    pub fn from_lumps(nodes: &[u8], leaves: &[u8], faces: &FaceLump<'a>, brushes: &BrushesLump<'a>) -> Result<'a, BSPTree<'a>> {
+    pub fn from_lumps(nodes: &[u8], leaves: &[u8], leaf_faces: &[u8], leaf_brushes: &[u8], faces: &FaceLump<'a>, brushes: &BrushesLump<'a>) -> Result<'a, BSPTree<'a>> {
         if nodes.len() % NODE_SIZE != 0 || leaves.len() % LEAF_SIZE != 0 {
             return Err(Error::BadFormat);
         }
 
-        Ok(BSPTree { root: BSPTree::compile_node(0, nodes, leaves, faces, brushes)? })
+        Ok(BSPTree { root: BSPTree::compile_node(0, nodes, leaves, leaf_faces, leaf_brushes, faces, brushes)? })
     }
 
     /// Internal function. Visits given node and all its children. Used to recursively build tree.
-    fn compile_node(i: i32, nodes: &[u8], leaves: &[u8], faces_lump: &FaceLump<'a>, brushes_lump: &BrushesLump<'a>) -> Result<'a, BSPNode<'a>> {
+    fn compile_node(i: i32, nodes: &[u8], leaves: &[u8], leaf_faces: &[u8], leaf_brushes: &[u8], faces_lump: &FaceLump<'a>, brushes_lump: &BrushesLump<'a>) -> Result<'a, BSPNode<'a>> {
         if i < 0 {
             // Leaf.
             let i = i.abs() - 1;
@@ -53,13 +53,18 @@ impl<'a> BSPTree<'a> {
             let start = slice_to_i32(&raw[32..36]) as usize;
             let n = slice_to_i32(&raw[36..40]) as usize;
             let mut faces = Vec::with_capacity(n);
+            if n > 0 {
+                if start + n > leaf_faces.len() / 4 {
+                    return Err(Error::BadRef { loc: "Tree.Leaf.LeafFaces", val: start + n })
+                }
 
-            if start + n > faces_lump.faces.len() {
-                return Err(Error::BadRef { loc: "Tree.Leaf.Faces", val: start + n })
-            }
-
-            for i in start..start+n {
-                faces.push((&faces_lump.faces[i]).into());
+                for i in start..start+n {
+                    let face_index = slice_to_i32(&leaf_faces[i * 4..(i+1) * 4]) as usize;
+                    if face_index >= faces_lump.faces.len() {
+                        return Err(Error::BadRef { loc: "Tree.LeafFace", val: face_index })
+                    }
+                    faces.push((&faces_lump.faces[face_index]).into());
+                }
             }
 
             let faces = faces.into_boxed_slice();
@@ -67,12 +72,18 @@ impl<'a> BSPTree<'a> {
             let start = slice_to_i32(&raw[40..44]) as usize;
             let n =  slice_to_i32(&raw[44..48]) as usize;
             let mut brushes =  Vec::with_capacity(n);
-            if start + n > brushes_lump.brushes.len() {
-                return Err(Error::BadRef { loc: "Tree.Leaf.Brushes", val: start + n })
-            }
+            if n > 0 {
+                if start + n > leaf_brushes.len() / 4 {
+                    return Err(Error::BadRef { loc: "Tree.Leaf.LeafBrushes", val: start + n })
+                }
 
-            for i in start..start+n {
-                brushes.push((&brushes_lump.brushes[i]).into());
+                for i in start..start+n {
+                    let brush_index = slice_to_i32(&leaf_brushes[i * 4..(i+1) * 4]) as usize;
+                    if brush_index >= brushes_lump.brushes.len() {
+                        return Err(Error::BadRef { loc: "Tree.LeafBrushes", val: brush_index })
+                    }
+                    brushes.push((&brushes_lump.brushes[brush_index]).into());
+                }
             }
 
             let brushes = brushes.into_boxed_slice();
@@ -96,8 +107,8 @@ impl<'a> BSPTree<'a> {
             let raw = &nodes[i as usize * NODE_SIZE..(i as usize * NODE_SIZE) + NODE_SIZE];
 
             // 0..4 = i
-            let child_one = BSPTree::compile_node(slice_to_i32(&raw[4..8]), nodes, leaves, faces_lump, brushes_lump)?;
-            let child_two = BSPTree::compile_node(slice_to_i32(&raw[8..12]), nodes, leaves, faces_lump, brushes_lump)?;
+            let child_one = BSPTree::compile_node(slice_to_i32(&raw[4..8]), nodes, leaves, leaf_faces, leaf_brushes, faces_lump, brushes_lump)?;
+            let child_two = BSPTree::compile_node(slice_to_i32(&raw[8..12]), nodes, leaves, leaf_faces, leaf_brushes, faces_lump, brushes_lump)?;
             let min = IVector3::from_slice(&raw[12..24]);
             let max = IVector3::from_slice(&raw[24..36]);
 

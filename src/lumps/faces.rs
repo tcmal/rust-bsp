@@ -75,7 +75,7 @@ impl<'a> Face<'a> {
         // effects
         let effect_id = slice_to_i32(&data[4..8]) as usize;
         let mut effect = None;
-        if effect_id > 0 {
+        if effect_id < 0xffffffff {
             if effect_id >= effects.effects.len() {
                 return Err(Error::BadRef {
                     loc: "Face.Effect",
@@ -93,7 +93,7 @@ impl<'a> Face<'a> {
         let vertex_offset = slice_to_i32(&data[12..16]) as usize;
         let vertex_n = slice_to_i32(&data[16..20]) as usize;
 
-        if (vertex_offset + vertex_n) >= vertices_lump.vertices.len() {
+        if (vertex_offset + vertex_n) > vertices_lump.vertices.len() {
             return Err(Error::BadRef {
                 loc: "Face.Vertices",
                 val: vertex_offset,
@@ -111,7 +111,7 @@ impl<'a> Face<'a> {
         let meshverts_offset = slice_to_i32(&data[20..24]) as usize;
         let meshverts_n = slice_to_i32(&data[24..28]) as usize;
 
-        if (meshverts_offset + meshverts_n) >= meshverts_lump.meshverts.len() {
+        if (meshverts_offset + meshverts_n) > meshverts_lump.meshverts.len() {
             return Err(Error::BadRef {
                 loc: "Face.MeshVerts",
                 val: meshverts_offset,
@@ -128,7 +128,7 @@ impl<'a> Face<'a> {
         // lightmap
         let lightmap_id = slice_to_i32(&data[28..32]) as usize;
         let mut lightmap = None;
-        if lightmap_id > 0 {
+        if lightmap_id < 0xffffffff {
             if lightmap_id >= lightmaps.maps.len() {
                 return Err(Error::BadRef {
                     loc: "Face.Lightmap",

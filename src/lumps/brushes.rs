@@ -73,11 +73,17 @@ impl<'a> BrushesLump<'a> {
                 let brush = &brush_sides_lump[offset..offset + SIDE_SIZE];
 
                 let plane = slice_to_i32(&brush[0..4]) as usize;
-                if plane >= planes_lump.planes.len() {
+                if plane / 2 >= planes_lump.planes.len() {
                     return Err(Error::BadRef { loc: "Brush.Side.Plane", val: plane })
                 }
-                let plane = (&planes_lump.planes[plane]).into();
 
+                let mut is_opposing = false;
+                if plane %2 != 0 {
+                    is_opposing = true;
+                }
+                
+                let plane = (&planes_lump.planes[plane / 2]).into();
+                
                 let texture = slice_to_i32(&brush[4..8]) as usize;
                 if texture >= textures_lump.textures.len() {
                     return Err(Error::BadRef { loc: "Brush.Side.Texture", val: texture })
@@ -85,8 +91,9 @@ impl<'a> BrushesLump<'a> {
                 let texture = (&textures_lump.textures[texture]).into();
 
                 sides.push(BrushSide {
-                    plane: plane,
-                    texture: texture
+                    plane,
+                    is_opposing,
+                    texture
                 });
             }
         }
@@ -113,5 +120,6 @@ pub struct Brush<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct BrushSide<'a> {
     pub plane: TransparentNonNull<Plane>,
-    pub texture: TransparentNonNull<Texture<'a>>
+    pub is_opposing: bool,
+    pub texture: TransparentNonNull<Texture<'a>>,
 }

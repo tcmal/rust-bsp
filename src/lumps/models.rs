@@ -60,8 +60,8 @@ impl<'a> ModelsLump<'a> {
                         .map(|x| TransparentNonNull::from(&faces_lump.faces[x]))
                         .collect::<Vec<TransparentNonNull<Face>>>().into_boxed_slice();
 
-            let first_brush = slice_to_i32(&raw[24..28]) as usize;
-            let n_brushes = slice_to_i32(&raw[28..32]) as usize;
+            let first_brush = slice_to_i32(&raw[32..36]) as usize;
+            let n_brushes = slice_to_i32(&raw[36..40]) as usize;
 
             if first_brush + n_brushes > brushes_lump.brushes.len() {
                 return Err(Error::BadRef { loc: "Model.Brush", val: n_brushes });

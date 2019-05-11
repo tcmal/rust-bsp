@@ -14,15 +14,14 @@
 // 
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
+
 extern crate stockton_bsp;
+
 use stockton_bsp::BSPFile;
 
 #[test]
 fn test_basic() {
     let data = include_bytes!("./13power.bsp");
 
-    let lump = BSPFile::from_buffer(data).unwrap();
-
-    println!("{:?}", lump);
-    assert!(false);
+    let _lump = BSPFile::from_buffer(data).unwrap();
 }

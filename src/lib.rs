@@ -116,7 +116,8 @@ impl<'a> BSPFile<'a> {
                 }
 
                 // ---
-                let tree = BSPTree::from_lumps(header.get_lump(buf, 3), header.get_lump(buf, 4), &res.faces, &res.brushes)?;
+                let tree = BSPTree::from_lumps(header.get_lump(buf, 3), 
+                    header.get_lump(buf, 4), header.get_lump(buf, 5), header.get_lump(buf, 6), &res.faces, &res.brushes)?;
                 let models = ModelsLump::from_lump(header.get_lump(buf, 7), &res.faces, &res.brushes)?;
 
                 unsafe {
