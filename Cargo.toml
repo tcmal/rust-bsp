@@ -1,5 +1,5 @@
 [package]
-name = "bsp"
+name = "stockton-bsp"
 version = "1.0.0"
 authors = ["Oscar <oscar.shrimpton.personal@gmail.com>"]
 description = "Library for parsing Q3 .bsp files."
@@ -8,7 +8,7 @@ homepage = "https://github.com/tcmal/rust-bsp"
 readme = "README.md"
 keywords = ["gameengines", "3d", "quake", "stockton"]
 categories = ["game-engines"]
-license = "GPLv3"
+license = "GPL-3.0"
 
 [badges]
 travis-ci = { repository = "tcmal/rust-bsp", branch = "master" }
