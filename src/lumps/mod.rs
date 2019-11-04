@@ -30,6 +30,7 @@ pub mod tree;
 pub mod vertices;
 pub mod visdata;
 pub mod models;
+pub mod advertisements;
 
 pub use self::brushes::BrushesLump;
 pub use self::effects::EffectsLump;
@@ -43,3 +44,4 @@ pub use self::vertices::{MeshVertsLump, VerticesLump};
 pub use self::faces::FaceLump;
 pub use self::visdata::VisDataLump;
 pub use self::models::ModelsLump;
+pub use self::advertisements::AdvertisementsLump;

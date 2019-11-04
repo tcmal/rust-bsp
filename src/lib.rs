@@ -28,7 +28,7 @@ pub mod types;
 use std::pin::Pin;
 
 use directory::Header;
-use lumps::{BrushesLump, EntitiesLump, LightVolsLump, PlanesLump, TexturesLump, VerticesLump, MeshVertsLump, LightmapsLump, FaceLump, EffectsLump, BSPTree, VisDataLump, ModelsLump};
+use lumps::*;
 use types::{Error, Result};
 
 /// Represents a parsed BSP file.
@@ -47,7 +47,10 @@ pub struct BSPFile<'a> {
     pub faces: FaceLump<'a>,
     pub tree: BSPTree<'a>,
     pub visdata: VisDataLump,
-    pub models: ModelsLump<'a>
+    pub models: ModelsLump<'a>,
+
+    /// Only present for Quake live maps (IBSP47)
+    pub advertisements: Option<AdvertisementsLump<'a>>
 }
 
 impl<'a> BSPFile<'a> {
@@ -56,8 +59,8 @@ impl<'a> BSPFile<'a> {
         let header = Header::from(buf)?;
 
         match header.version {
-            0x2e => {
-                // Quake 3
+            0x2e | 0x2f => {
+                // Quake 3 or Quake LIVE (IBSP47)
 
                 // Because of the way this works, each "level" is compiled, moved into the struct, then repeat till the whole file is parsed.
                 // Each lump can only be parsed once all its dependents are, so the empty function is just a decoy, it should never be exposed.
@@ -75,6 +78,13 @@ impl<'a> BSPFile<'a> {
 
                 let visdata = VisDataLump::from_lump(header.get_lump(buf, 16))?;
 
+                // Quake Live has an advertisements lump
+                let advertisements = if header.version == 0x2f {
+                    Some(AdvertisementsLump::from_lump(header.get_lump(buf, 17))?)
+                } else {
+                    None
+                };
+
                 let mut res = Box::pin(BSPFile {
                     directory: header,
                     entities,
@@ -84,6 +94,7 @@ impl<'a> BSPFile<'a> {
                     lightmaps,
                     meshverts,
                     vertices,
+                    advertisements,
                     effects: EffectsLump::empty(),
                     brushes: BrushesLump::empty(),
                     faces: FaceLump::empty(),
