@@ -23,7 +23,7 @@ const ADVERTISEMENT_SIZE: usize = 4 + (4 * 3) + (4 * 3 * 4) + 64;
 
 #[derive(Debug, Clone)]
 pub struct Advertisement<'a> {
-    pub cell_d: u32,
+    pub cell_id: u32,
     pub normal: Vector3<f32>,
     pub rect: [Vector3<f32>; 4],
 
@@ -48,7 +48,7 @@ impl<'a> AdvertisementsLump<'a> {
             let raw = &buf[n * ADVERTISEMENT_SIZE..(n + 1) * ADVERTISEMENT_SIZE];
 
             advertisements.push(Advertisement {
-                cell_d: slice_to_u32(&raw[0..4]),
+                cell_id: slice_to_u32(&raw[0..4]),
                 normal: slice_to_vec3(&raw[4..16]),
                 rect: [
                     slice_to_vec3(&raw[16..28]),
