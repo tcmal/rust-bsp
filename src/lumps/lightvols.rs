@@ -1,23 +1,23 @@
 // Copyright (C) 2019 Oscar Shrimpton
-// 
+//
 // This file is part of stockton-bsp.
-// 
+//
 // stockton-bsp is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // stockton-bsp is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::convert::TryInto;
 
-use crate::types::{Result, Error, RGB};
+use crate::types::{Error, Result, RGB};
 
 const VOL_LENGTH: usize = (3 * 2) + 2;
 
@@ -25,12 +25,12 @@ const VOL_LENGTH: usize = (3 * 2) + 2;
 pub struct LightVol {
     pub ambient: RGB,
     pub directional: RGB,
-    pub dir: [u8; 2]
+    pub dir: [u8; 2],
 }
 
 #[derive(Debug, Clone)]
 pub struct LightVolsLump {
-    pub vols: Box<[LightVol]>
+    pub vols: Box<[LightVol]>,
 }
 
 impl LightVolsLump {
@@ -41,14 +41,16 @@ impl LightVolsLump {
         let length = lump.len() / VOL_LENGTH;
         let mut vols = Vec::with_capacity(length);
         for n in 0..length {
-            let data = &lump[n * VOL_LENGTH..(n+1) * VOL_LENGTH];
+            let data = &lump[n * VOL_LENGTH..(n + 1) * VOL_LENGTH];
             vols.push(LightVol {
                 ambient: RGB::from_slice(&data[0..3]),
                 directional: RGB::from_slice(&data[3..6]),
                 dir: data[6..8].try_into().unwrap(),
             });
         }
-    
-        Ok(LightVolsLump {vols: vols.into_boxed_slice()})
+
+        Ok(LightVolsLump {
+            vols: vols.into_boxed_slice(),
+        })
     }
 }

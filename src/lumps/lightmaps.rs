@@ -82,7 +82,7 @@ impl LightmapsLump {
             for x in 0..128 {
                 for y in 0..128 {
                     let offset = (x * 128 * 3) + (y * 3);
-                    map[x][y] = RGB::from_slice(&raw[offset..offset+3]);
+                    map[x][y] = RGB::from_slice(&raw[offset..offset + 3]);
                 }
             }
             maps.push(Lightmap { map })

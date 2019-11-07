@@ -1,44 +1,48 @@
 // Copyright (C) 2019 Oscar Shrimpton
-// 
+//
 // This file is part of stockton-bsp.
-// 
+//
 // stockton-bsp is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // stockton-bsp is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
 //! Parses the brushes & brushsides lumps from a bsp file
 
-/// The size of one brush record. 
+/// The size of one brush record.
 const BRUSH_SIZE: usize = (4 * 3);
 
 /// The size of one brushsize record
 const SIDE_SIZE: usize = (4 * 2);
 
-use crate::lumps::planes::{PlanesLump, Plane};
-use crate::lumps::textures::{Texture, TexturesLump};
 use crate::lumps::helpers::slice_to_i32;
-use crate::types::{Result, Error, TransparentNonNull};
+use crate::lumps::planes::{Plane, PlanesLump};
+use crate::lumps::textures::{Texture, TexturesLump};
+use crate::types::{Error, Result, TransparentNonNull};
 
 /// A brushes lump from a bsp file.
 /// BrushSides are also stored inside here.
 #[derive(Debug, Clone)]
 pub struct BrushesLump<'a> {
-    pub brushes: Box<[Brush<'a>]>
+    pub brushes: Box<[Brush<'a>]>,
 }
 
 impl<'a> BrushesLump<'a> {
     /// Parse the brushes & brushsides lump from a bsp file.
-    pub fn from_lump(brushes_lump: &'a [u8], brush_sides_lump: &'a [u8], textures_lump: &TexturesLump<'a>, planes_lump: &PlanesLump) -> Result<'a, BrushesLump<'a>> {
-        
+    pub fn from_lump(
+        brushes_lump: &'a [u8],
+        brush_sides_lump: &'a [u8],
+        textures_lump: &TexturesLump<'a>,
+        planes_lump: &PlanesLump,
+    ) -> Result<'a, BrushesLump<'a>> {
         if brushes_lump.len() % BRUSH_SIZE != 0 || brush_sides_lump.len() % SIDE_SIZE != 0 {
             return Err(Error::BadFormat);
         }
@@ -51,20 +55,37 @@ impl<'a> BrushesLump<'a> {
             let brush = &brushes_lump[offset..offset + BRUSH_SIZE];
             let texture_index = slice_to_i32(&brush[8..12]) as usize;
             if texture_index >= textures_lump.textures.len() {
-                return Err(Error::BadRef { loc: "Brush.Texture", val: texture_index })
+                return Err(Error::BadRef {
+                    loc: "Brush.Texture",
+                    val: texture_index,
+                });
             }
 
             brushes.push(Brush {
-                sides: BrushesLump::get_sides(brush_sides_lump, slice_to_i32(&brush[0..4]), slice_to_i32(&brush[4..8]), textures_lump, planes_lump)?,
-                texture: (&textures_lump.textures[texture_index]).into()
+                sides: BrushesLump::get_sides(
+                    brush_sides_lump,
+                    slice_to_i32(&brush[0..4]),
+                    slice_to_i32(&brush[4..8]),
+                    textures_lump,
+                    planes_lump,
+                )?,
+                texture: (&textures_lump.textures[texture_index]).into(),
             });
         }
 
-        Ok(BrushesLump { brushes: brushes.into_boxed_slice() })
+        Ok(BrushesLump {
+            brushes: brushes.into_boxed_slice(),
+        })
     }
 
     /// Internal function to get the relevant brushsides for a brush from the data in the brush lump.
-    fn get_sides(brush_sides_lump: &[u8], start: i32, length: i32, textures_lump: &TexturesLump<'a>, planes_lump: &PlanesLump) -> Result<'a, Box<[BrushSide<'a>]>> {
+    fn get_sides(
+        brush_sides_lump: &[u8],
+        start: i32,
+        length: i32,
+        textures_lump: &TexturesLump<'a>,
+        planes_lump: &PlanesLump,
+    ) -> Result<'a, Box<[BrushSide<'a>]>> {
         let mut sides = Vec::with_capacity(length as usize);
 
         if length > 0 {
@@ -74,26 +95,32 @@ impl<'a> BrushesLump<'a> {
 
                 let plane = slice_to_i32(&brush[0..4]) as usize;
                 if plane / 2 >= planes_lump.planes.len() {
-                    return Err(Error::BadRef { loc: "Brush.Side.Plane", val: plane })
+                    return Err(Error::BadRef {
+                        loc: "Brush.Side.Plane",
+                        val: plane,
+                    });
                 }
 
                 let mut is_opposing = false;
-                if plane %2 != 0 {
+                if plane % 2 != 0 {
                     is_opposing = true;
                 }
-                
+
                 let plane = (&planes_lump.planes[plane / 2]).into();
-                
+
                 let texture = slice_to_i32(&brush[4..8]) as usize;
                 if texture >= textures_lump.textures.len() {
-                    return Err(Error::BadRef { loc: "Brush.Side.Texture", val: texture })
+                    return Err(Error::BadRef {
+                        loc: "Brush.Side.Texture",
+                        val: texture,
+                    });
                 }
                 let texture = (&textures_lump.textures[texture]).into();
 
                 sides.push(BrushSide {
                     plane,
                     is_opposing,
-                    texture
+                    texture,
                 });
             }
         }
@@ -101,10 +128,12 @@ impl<'a> BrushesLump<'a> {
         Ok(sides.into_boxed_slice())
     }
 
-    /// Helper function to get an empty brushes lump. 
+    /// Helper function to get an empty brushes lump.
     /// This is used when initialising a BSP file because of references.
     pub fn empty() -> BrushesLump<'static> {
-        BrushesLump { brushes: vec![].into_boxed_slice() }
+        BrushesLump {
+            brushes: vec![].into_boxed_slice(),
+        }
     }
 }
 
@@ -113,7 +142,7 @@ impl<'a> BrushesLump<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Brush<'a> {
     pub sides: Box<[BrushSide<'a>]>,
-    pub texture: TransparentNonNull<Texture<'a>>
+    pub texture: TransparentNonNull<Texture<'a>>,
 }
 
 /// Bounding surfacce for brush.

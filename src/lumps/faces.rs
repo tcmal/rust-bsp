@@ -15,9 +15,8 @@
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-
 use super::effects::{Effect, EffectsLump};
-use super::helpers::{slice_to_i32, slice_to_vec3, slice_to_vec2i};
+use super::helpers::{slice_to_i32, slice_to_vec2i, slice_to_vec3};
 use super::lightmaps::{Lightmap, LightmapsLump};
 use super::textures::{Texture, TexturesLump};
 use super::vertices::{MeshVert, MeshVertsLump, Vertex, VerticesLump};
@@ -85,7 +84,6 @@ impl<'a> Face<'a> {
             }
             effect = Some((&effects.effects[effect_id]).into());
         }
-
 
         // face type
         let face_type: FaceType = unsafe { ::std::mem::transmute(slice_to_i32(&data[8..12])) };
@@ -209,6 +207,8 @@ impl<'a> FaceLump<'a> {
     }
 
     pub fn empty() -> FaceLump<'static> {
-        FaceLump { faces: vec![].into_boxed_slice() }
+        FaceLump {
+            faces: vec![].into_boxed_slice(),
+        }
     }
 }

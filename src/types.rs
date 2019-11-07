@@ -17,7 +17,6 @@
 
 //! Various types used in parsed BSP files.
 
-
 use std::convert::{From, TryInto};
 use std::fmt;
 use std::ops::Deref;

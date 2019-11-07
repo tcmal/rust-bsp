@@ -50,7 +50,7 @@ pub struct BSPFile<'a> {
     pub models: ModelsLump<'a>,
 
     /// Only present for Quake live maps (IBSP47)
-    pub advertisements: Option<AdvertisementsLump<'a>>
+    pub advertisements: Option<AdvertisementsLump<'a>>,
 }
 
 impl<'a> BSPFile<'a> {
@@ -100,17 +100,22 @@ impl<'a> BSPFile<'a> {
                     faces: FaceLump::empty(),
                     tree: BSPTree::empty(),
                     visdata,
-                    models: ModelsLump::empty()
+                    models: ModelsLump::empty(),
                 });
 
                 // Then the next level is constructed
-                let brushes = BrushesLump::from_lump(header.get_lump(buf, 8), header.get_lump(buf, 9), &res.textures, &res.planes)?;
+                let brushes = BrushesLump::from_lump(
+                    header.get_lump(buf, 8),
+                    header.get_lump(buf, 9),
+                    &res.textures,
+                    &res.planes,
+                )?;
                 // And moved into the *existing* struct
                 unsafe {
                     let mut_ref = Pin::as_mut(&mut res);
                     Pin::get_unchecked_mut(mut_ref).brushes = brushes;
                 }
-                
+
                 // ---
                 let effects = EffectsLump::from_lump(header.get_lump(buf, 12), &res.brushes)?;
 
@@ -120,17 +125,31 @@ impl<'a> BSPFile<'a> {
                 }
 
                 // ---
-                let faces = FaceLump::from_lump(header.get_lump(buf, 13), &res.textures, &res.effects, &res.vertices, &res.meshverts, &res.lightmaps)?;
-                
+                let faces = FaceLump::from_lump(
+                    header.get_lump(buf, 13),
+                    &res.textures,
+                    &res.effects,
+                    &res.vertices,
+                    &res.meshverts,
+                    &res.lightmaps,
+                )?;
+
                 unsafe {
                     let mut_ref = Pin::as_mut(&mut res);
                     Pin::get_unchecked_mut(mut_ref).faces = faces;
                 }
 
                 // ---
-                let tree = BSPTree::from_lumps(header.get_lump(buf, 3), 
-                    header.get_lump(buf, 4), header.get_lump(buf, 5), header.get_lump(buf, 6), &res.faces, &res.brushes)?;
-                let models = ModelsLump::from_lump(header.get_lump(buf, 7), &res.faces, &res.brushes)?;
+                let tree = BSPTree::from_lumps(
+                    header.get_lump(buf, 3),
+                    header.get_lump(buf, 4),
+                    header.get_lump(buf, 5),
+                    header.get_lump(buf, 6),
+                    &res.faces,
+                    &res.brushes,
+                )?;
+                let models =
+                    ModelsLump::from_lump(header.get_lump(buf, 7), &res.faces, &res.brushes)?;
 
                 unsafe {
                     let mut_ref = Pin::as_mut(&mut res);
@@ -145,6 +164,5 @@ impl<'a> BSPFile<'a> {
                 version: header.version,
             }),
         }
-
     }
 }

@@ -17,7 +17,7 @@
 
 use na::Vector3;
 use stockton_bsp::lumps::brushes::BrushesLump;
-use stockton_bsp::lumps::planes::{PlanesLump, Plane};
+use stockton_bsp::lumps::planes::{Plane, PlanesLump};
 use stockton_bsp::lumps::textures::{ContentsFlags, SurfaceFlags, Texture, TexturesLump};
 
 #[test]
@@ -53,19 +53,20 @@ fn test_brushes() {
             Plane {
                 normal: Vector3::new(0.0, 0.0, 0.0),
                 dist: 1.0,
-                complement_normal: Vector3::new(0.0, 0.0, 0.0)
+                complement_normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Plane {
                 normal: Vector3::new(0.0, 0.0, 0.0),
                 dist: 2.0,
-                complement_normal: Vector3::new(0.0, 0.0, 0.0)
+                complement_normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Plane {
                 normal: Vector3::new(0.0, 0.0, 0.0),
                 dist: 3.0,
-                complement_normal: Vector3::new(0.0, 0.0, 0.0)
-            }
-        ].into_boxed_slice()
+                complement_normal: Vector3::new(0.0, 0.0, 0.0),
+            },
+        ]
+        .into_boxed_slice(),
     };
 
     let parsed = BrushesLump::from_lump(brushes, sides, &textures, &planes).unwrap();

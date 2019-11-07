@@ -15,9 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-use stockton_bsp::lumps::textures::{Texture, SurfaceFlags, ContentsFlags};
 use stockton_bsp::lumps::brushes::{Brush, BrushesLump};
 use stockton_bsp::lumps::effects::EffectsLump;
+use stockton_bsp::lumps::textures::{ContentsFlags, SurfaceFlags, Texture};
 use stockton_bsp::types::TransparentNonNull;
 
 #[test]
