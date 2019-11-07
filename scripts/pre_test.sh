@@ -16,11 +16,21 @@
 # You should have received a copy of the GNU General Public License
 # along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
+rm tests/tree/test_tree.bin
 node scripts/compile_hex.js tests/tree/test_tree.hex
+rm tests/brushes/test_brushes.bin
 node scripts/compile_hex.js tests/brushes/test_brushes.hex
+rm tests/effects/test_effects.bin
 node scripts/compile_hex.js tests/effects/test_effects.hex
+rm tests/vertices/test_vertices.bin
 node scripts/compile_hex.js tests/vertices/test_vertices.hex
+rm tests/vertices/test_meshvertices.bin
 node scripts/compile_hex.js tests/vertices/test_meshvertices.hex
+rm tests/lightmaps/test_lightmaps.bin
 node scripts/compile_hex.js tests/lightmaps/test_lightmaps.hex
+rm tests/visdata/test_visdata.bin
 node scripts/compile_hex.js tests/visdata/test_visdata.hex
+rm tests/models/test_models.bin
 node scripts/compile_hex.js tests/models/test_models.hex
+rm tests/advertisements/test_advertisements.bin
+node scripts/compile_hex.js tests/advertisements/test_advertisements.hex

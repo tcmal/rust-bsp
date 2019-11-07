@@ -19,6 +19,7 @@ extern crate nalgebra as na;
 #[cfg(test)]
 extern crate stockton_bsp;
 
+mod advertisements;
 mod brushes;
 mod effects;
 mod lightmaps;
