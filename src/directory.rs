@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::types::{Error, Result};
+use crate::types::Result;
 use std::convert::TryInto;
 
 /// "IBSP"
@@ -45,17 +45,14 @@ impl Header {
     /// string[4] magic             Magic number. Always "IBSP".
     /// int version                 Version number. 0x2e for the BSP files distributed with Quake 3.
     /// direntry[17] direntries     Lump directory, seventeen entries.
-    pub fn from(v: &'_ [u8]) -> Result<'_, Header> {
+    pub fn from(v: &[u8]) -> Result<Header> {
         if v.len() < HEADER_LEN {
-            return Err(Error::BadSize { req: 17 });
+            return Err(invalid_error!("Header is too short"));
         }
         let magic = &v[0..4];
 
         if magic != MAGIC_HEADER {
-            return Err(Error::BadMagic {
-                expected: MAGIC_HEADER,
-                actual: magic,
-            });
+            return Err(invalid_error!("Header magic is incorrect"));
         }
 
         let version: &[u8; 4] = v[4..8].try_into().unwrap();

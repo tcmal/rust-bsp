@@ -1,9 +1,7 @@
 # stockton-bsp
 [![Build Status](https://travis-ci.org/tcmal/rust-bsp.svg?branch=master)](https://travis-ci.org/tcmal/rust-bsp)
 
-Library for reading `.bsp` files. Currently supports quake 3 bsps. Nightly.
-
-![BSP File graph](structure.png?raw=true)
+Library for reading `.bsp` files. Currently supports quake 3 bsps.
 
 # Contributing
 

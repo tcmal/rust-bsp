@@ -17,47 +17,52 @@
 
 use std::str;
 
-use super::brushes::{Brush, BrushesLump};
+use super::brushes::BrushesLump;
 use super::helpers::slice_to_i32;
-use crate::types::{Error, Result, TransparentNonNull};
+use crate::types::Result;
 
 /// The size of one effect definition
 const EFFECT_SIZE: usize = 64 + 4 + 4;
 
 /// One effect definition
 #[derive(Debug, Clone, PartialEq)]
-pub struct Effect<'a> {
+pub struct Effect {
     /// The name of the effect - always 64 characters long
-    pub name: &'a str,
+    pub name: String,
 
     /// The brush used for this effect
-    pub brush: TransparentNonNull<Brush<'a>>, // todo: unknown: i32
+    pub brush_idx: usize
+
+    // todo: unknown: i32
 }
 
 /// Lump containing all effects
 /// Found at index 12 in a q3 bsp
 #[derive(Debug, Clone)]
-pub struct EffectsLump<'a> {
-    pub effects: Box<[Effect<'a>]>,
+pub struct EffectsLump {
+    pub effects: Box<[Effect]>,
 }
 
-impl<'a> EffectsLump<'a> {
+impl EffectsLump {
     /// Parses the given lump and links the brush references to the given `BrushesLump`
-    pub fn from_lump(lump: &'a [u8], brushes: &BrushesLump<'a>) -> Result<'a, EffectsLump<'a>> {
+    pub fn from_lump(lump: &[u8], brushes: &BrushesLump) -> Result<EffectsLump> {
         if lump.len() % EFFECT_SIZE != 0 {
-            return Err(Error::BadFormat);
+            return Err(invalid_error!("EffectsLump is incorrectly sized"));
         }
-
         let length = lump.len() / EFFECT_SIZE;
 
         let mut effects = Vec::with_capacity(length);
-
         for n in 0..length {
             let raw = &lump[n * EFFECT_SIZE..(n + 1) * EFFECT_SIZE];
-            let brush_id = slice_to_i32(&raw[64..68]) as usize;
+
+            let brush_idx = slice_to_i32(&raw[64..68]) as usize;
+            if brush_idx >= brushes.brushes.len() {
+                return Err(invalid_error!("Effect references brush that doesn't exist"));
+            }
+
             effects.push(Effect {
-                name: str::from_utf8(&raw[..64]).unwrap(),
-                brush: (&brushes.brushes[brush_id]).into(),
+                name: str::from_utf8(&raw[..64])?.to_owned(),
+                brush_idx
             });
         }
 
@@ -66,7 +71,7 @@ impl<'a> EffectsLump<'a> {
         })
     }
 
-    pub fn empty() -> EffectsLump<'static> {
+    pub fn empty() -> EffectsLump {
         EffectsLump {
             effects: vec![].into_boxed_slice(),
         }

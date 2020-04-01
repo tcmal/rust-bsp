@@ -17,7 +17,7 @@
 
 use std::convert::TryInto;
 
-use crate::types::{Error, Result, RGB};
+use crate::types::{Result, RGB};
 
 const VOL_LENGTH: usize = (3 * 2) + 2;
 
@@ -34,11 +34,12 @@ pub struct LightVolsLump {
 }
 
 impl LightVolsLump {
-    pub fn from_lump<'a>(lump: &[u8]) -> Result<'a, LightVolsLump> {
+    pub fn from_lump(lump: &[u8]) -> Result<LightVolsLump> {
         if lump.len() % VOL_LENGTH != 0 {
-            return Err(Error::BadFormat);
+            return Err(invalid_error!("LightVols lump isn't sized correctly"));
         }
         let length = lump.len() / VOL_LENGTH;
+
         let mut vols = Vec::with_capacity(length);
         for n in 0..length {
             let data = &lump[n * VOL_LENGTH..(n + 1) * VOL_LENGTH];

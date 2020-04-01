@@ -22,22 +22,19 @@ const START_BRACKET: u8 = b'{';
 use std::collections::HashMap;
 use std::str;
 
-use crate::types::{Error, Result};
+use crate::types::Result;
 
 #[derive(Debug, Clone)]
 /// Game-related map information
-pub struct EntitiesLump<'a> {
-    /// The unparsed string from which entity data was extracted
-    pub string: &'a str,
-
+pub struct EntitiesLump {
     /// The extracted entity data
-    pub entities: Vec<Entity<'a>>,
+    pub entities: Vec<Entity>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 /// A game entity
-pub struct Entity<'a> {
-    pub attributes: HashMap<&'a str, &'a str>,
+pub struct Entity {
+    pub attributes: HashMap<String, String>,
 }
 
 /// Internal enum to parse through the entities string.
@@ -50,9 +47,9 @@ enum ParseState {
     OutsideEntity,
 }
 
-impl<'a> EntitiesLump<'a> {
+impl EntitiesLump {
     /// Parse the given lump as an Entities Lump.
-    pub fn from_lump(lump: &'a [u8]) -> Result<EntitiesLump<'a>> {
+    pub fn from_lump(lump: &[u8]) -> Result<EntitiesLump> {
         use self::ParseState::*;
 
         let string = str::from_utf8(lump).unwrap();
@@ -86,15 +83,15 @@ impl<'a> EntitiesLump<'a> {
                         state = ParseState::InsideEntity;
                         val_end = i;
 
-                        attrs.insert(&string[key_start..key_end], &string[val_start..val_end]);
+                        attrs.insert(string[key_start..key_end].to_owned(), string[val_start..val_end].to_owned());
                     }
                     _ => {
-                        return Err(Error::BadFormat);
+                        return Err(invalid_error!("Entity definition is malformed"));
                     }
                 },
                 END_BRACKET => {
                     if state != InsideEntity {
-                        return Err(Error::BadFormat);
+                        return Err(invalid_error!("Entity definition is malformed"));
                     }
 
                     state = OutsideEntity;
@@ -104,14 +101,14 @@ impl<'a> EntitiesLump<'a> {
                 }
                 START_BRACKET => {
                     if state != OutsideEntity {
-                        return Err(Error::BadFormat);
+                        return Err(invalid_error!("Entity definition is malformed"));
                     }
                     state = InsideEntity;
                 }
                 _ => {}
             }
         }
-        Ok(EntitiesLump { string, entities })
+        Ok(EntitiesLump { entities })
     }
 }
 

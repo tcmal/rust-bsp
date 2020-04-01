@@ -15,23 +15,23 @@
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-//! Parses the lightmaps lump
+//! Parses the LightMaps lump
 
 use std::fmt;
 
-use crate::types::{Error, Result, RGB};
+use crate::types::{Result, RGB};
 
-/// The size of one lightmap
+/// The size of one LightMap
 const LIGHTMAP_SIZE: usize = 128 * 128 * 3;
 
 /// Stores light map textures that help make surface lighting more realistic
 #[derive(Clone)]
-pub struct Lightmap {
+pub struct LightMap {
     pub map: [[RGB; 128]; 128],
 }
 
-impl PartialEq for Lightmap {
-    fn eq(&self, other: &Lightmap) -> bool {
+impl PartialEq for LightMap {
+    fn eq(&self, other: &LightMap) -> bool {
         for x in 0..128 {
             for y in 0..128 {
                 if self.map[x][y] != other.map[x][y] {
@@ -43,8 +43,8 @@ impl PartialEq for Lightmap {
     }
 }
 
-impl fmt::Debug for Lightmap {
-    // rust doesn't implement debug for 3d arrays so done manually
+impl fmt::Debug for LightMap {
+    // rust can't derive debug for 3d arrays so done manually
     // \_( )_/
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "LightMap {{ map: [")?;
@@ -59,22 +59,21 @@ impl fmt::Debug for Lightmap {
     }
 }
 
-/// Stores all the lightmaps parsed from a BSP file.
+/// Stores all the LightMaps parsed from a BSP file.
 #[derive(Debug, Clone)]
-pub struct LightmapsLump {
-    pub maps: Box<[Lightmap]>,
+pub struct LightMapsLump {
+    pub maps: Box<[LightMap]>,
 }
 
-impl LightmapsLump {
-    /// Parse the lightmap lump from a bsp file.
-    pub fn from_lump<'a>(lump: &'a [u8]) -> Result<'a, LightmapsLump> {
+impl LightMapsLump {
+    /// Parse the LightMap lump from a bsp file.
+    pub fn from_lump(lump: &[u8]) -> Result<LightMapsLump> {
         if lump.len() % LIGHTMAP_SIZE != 0 {
-            return Err(Error::BadFormat);
+            return Err(invalid_error!("LightMap lump is incorrectly sized"));
         }
-
         let length = lump.len() / LIGHTMAP_SIZE;
-        let mut maps = Vec::with_capacity(length as usize);
 
+        let mut maps = Vec::with_capacity(length as usize);
         for n in 0..length {
             let raw = &lump[n * LIGHTMAP_SIZE..(n + 1) * LIGHTMAP_SIZE];
             let mut map: [[RGB; 128]; 128] = [[RGB::white(); 128]; 128];
@@ -85,10 +84,10 @@ impl LightmapsLump {
                     map[x][y] = RGB::from_slice(&raw[offset..offset + 3]);
                 }
             }
-            maps.push(Lightmap { map })
+            maps.push(LightMap { map })
         }
 
-        Ok(LightmapsLump {
+        Ok(LightMapsLump {
             maps: maps.into_boxed_slice(),
         })
     }

@@ -18,25 +18,25 @@
 use std::str;
 
 use super::helpers::slice_to_u32;
-use crate::types::{Error, Result};
+use crate::types::Result;
 
 const TEXTURE_LUMP_SIZE: usize = (64 + 4 + 4);
 
 #[derive(Debug, Clone)]
 /// Surface descriptions
-pub struct TexturesLump<'a> {
-    pub textures: Box<[Texture<'a>]>,
+pub struct TexturesLump {
+    pub textures: Box<[Texture]>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 /// A record from a `TexturesLump`
-pub struct Texture<'a> {
-    pub name: &'a str,
+pub struct Texture {
+    pub name: String,
     pub surface: SurfaceFlags,
     pub contents: ContentsFlags,
 }
 
-impl<'a> TexturesLump<'a> {
+impl TexturesLump {
     /// Try to parse the given buffer as an entities lump.
     /// # Format
     /// Each entity is:
@@ -44,20 +44,20 @@ impl<'a> TexturesLump<'a> {
     /// int flags           Surface flags.
     /// int contents        Content flags.
     /// Length of entities is total lump size / TEXTURE_LUMP_SIZE (64 + 4 + 4)
-    pub fn from_lump(lump: &'a [u8]) -> Result<TexturesLump<'a>> {
+    pub fn from_lump(lump: &[u8]) -> Result<TexturesLump> {
         if lump.is_empty() || lump.len() % TEXTURE_LUMP_SIZE != 0 {
-            return Err(Error::BadFormat);
+            return Err(invalid_error!("TexturesLump is incorrectly sized"));
         }
-
         let length = lump.len() / TEXTURE_LUMP_SIZE;
-        let mut textures = Vec::with_capacity(length);
 
+
+        let mut textures = Vec::with_capacity(length);
         for n in 0..length {
             let offset = n * TEXTURE_LUMP_SIZE;
             textures.push(Texture {
-                name: str::from_utf8(&lump[offset..offset + 64]).unwrap(),
-                surface: SurfaceFlags::from_bits(slice_to_u32(&lump[offset + 64..offset + 68]))?,
-                contents: ContentsFlags::from_bits(slice_to_u32(&lump[offset + 68..offset + 72]))?,
+                name: str::from_utf8(&lump[offset..offset + 64])?.to_owned(),
+                surface: SurfaceFlags::from_bits_truncate(slice_to_u32(&lump[offset + 64..offset + 68])),
+                contents: ContentsFlags::from_bits_truncate(slice_to_u32(&lump[offset + 68..offset + 72])),
             });
         }
 

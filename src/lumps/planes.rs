@@ -20,7 +20,7 @@
 const PLANE_SIZE: usize = (4 * 3) + 4;
 
 use super::helpers::{slice_to_f32, slice_to_vec3};
-use crate::types::{Error, Result};
+use crate::types::Result;
 
 use na::Vector3;
 
@@ -35,14 +35,14 @@ impl PlanesLump {
     /// Parse a lump of planes.
     /// A lump is (lump length / plane size) planes long
     pub fn from_lump(lump: &[u8]) -> Result<PlanesLump> {
-        let length = lump.len() / PLANE_SIZE;
 
+        let length = lump.len() / PLANE_SIZE;
         if lump.is_empty() || lump.len() % PLANE_SIZE != 0 || length % 2 != 0 {
-            return Err(Error::BadFormat);
+            return Err(invalid_error!("PlanesLump incorrectly sized"));
         }
 
-        let mut planes = Vec::with_capacity(length / 2);
 
+        let mut planes = Vec::with_capacity(length / 2);
         let mut n = 0;
         while n < length {
             let offset = n * PLANE_SIZE;

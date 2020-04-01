@@ -24,41 +24,54 @@ const BRUSH_SIZE: usize = (4 * 3);
 const SIDE_SIZE: usize = (4 * 2);
 
 use crate::lumps::helpers::slice_to_i32;
-use crate::lumps::planes::{Plane, PlanesLump};
-use crate::lumps::textures::{Texture, TexturesLump};
-use crate::types::{Error, Result, TransparentNonNull};
+use crate::lumps::planes::PlanesLump;
+use crate::lumps::textures::TexturesLump;
+use crate::types::Result;
 
 /// A brushes lump from a bsp file.
 /// BrushSides are also stored inside here.
 #[derive(Debug, Clone)]
-pub struct BrushesLump<'a> {
-    pub brushes: Box<[Brush<'a>]>,
+pub struct BrushesLump {
+    pub brushes: Box<[Brush]>,
 }
 
-impl<'a> BrushesLump<'a> {
+/// One brush record. Used for collision detection.
+/// "Each brush describes a convex volume as defined by its surrounding surfaces."
+#[derive(Debug, Clone, PartialEq)]
+pub struct Brush {
+    pub sides: Box<[BrushSide]>,
+    pub texture_idx: usize,
+}
+
+/// Bounding surfacce for brush.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BrushSide {
+    pub plane_idx: usize,
+    pub texture_idx: usize,
+    pub is_opposing: bool,
+}
+
+impl BrushesLump {
     /// Parse the brushes & brushsides lump from a bsp file.
     pub fn from_lump(
-        brushes_lump: &'a [u8],
-        brush_sides_lump: &'a [u8],
-        textures_lump: &TexturesLump<'a>,
-        planes_lump: &PlanesLump,
-    ) -> Result<'a, BrushesLump<'a>> {
+        brushes_lump: &[u8],
+        brush_sides_lump: &[u8],
+        textures_lump: &TexturesLump,
+        planes_lump: &PlanesLump
+    ) -> Result<BrushesLump> {
         if brushes_lump.len() % BRUSH_SIZE != 0 || brush_sides_lump.len() % SIDE_SIZE != 0 {
-            return Err(Error::BadFormat);
+            return Err(invalid_error!("BrushesLump is incorrectly sized"));
         }
-
         let length = brushes_lump.len() / BRUSH_SIZE;
-        let mut brushes = Vec::with_capacity(length as usize);
 
+        let mut brushes = Vec::with_capacity(length as usize);
         for n in 0..length {
             let offset = n * BRUSH_SIZE;
             let brush = &brushes_lump[offset..offset + BRUSH_SIZE];
-            let texture_index = slice_to_i32(&brush[8..12]) as usize;
-            if texture_index >= textures_lump.textures.len() {
-                return Err(Error::BadRef {
-                    loc: "Brush.Texture",
-                    val: texture_index,
-                });
+
+            let texture_idx = slice_to_i32(&brush[8..12]) as usize;
+            if texture_idx >= textures_lump.textures.len() {
+                return Err(invalid_error!("Brushes references a texture that doesn't exist"));
             }
 
             brushes.push(Brush {
@@ -69,7 +82,7 @@ impl<'a> BrushesLump<'a> {
                     textures_lump,
                     planes_lump,
                 )?,
-                texture: (&textures_lump.textures[texture_index]).into(),
+                texture_idx
             });
         }
 
@@ -83,9 +96,9 @@ impl<'a> BrushesLump<'a> {
         brush_sides_lump: &[u8],
         start: i32,
         length: i32,
-        textures_lump: &TexturesLump<'a>,
+        textures_lump: &TexturesLump,
         planes_lump: &PlanesLump,
-    ) -> Result<'a, Box<[BrushSide<'a>]>> {
+    ) -> Result<Box<[BrushSide]>> {
         let mut sides = Vec::with_capacity(length as usize);
 
         if length > 0 {
@@ -93,62 +106,26 @@ impl<'a> BrushesLump<'a> {
                 let offset = n as usize * SIDE_SIZE;
                 let brush = &brush_sides_lump[offset..offset + SIDE_SIZE];
 
-                let plane = slice_to_i32(&brush[0..4]) as usize;
-                if plane / 2 >= planes_lump.planes.len() {
-                    return Err(Error::BadRef {
-                        loc: "Brush.Side.Plane",
-                        val: plane,
-                    });
+                let plane_idx = slice_to_i32(&brush[0..4]) as usize;
+                if plane_idx / 2 >= planes_lump.planes.len() {
+                    return Err(invalid_error!("BrushSide references a plane that doesn't exist"));
                 }
 
-                let mut is_opposing = false;
-                if plane % 2 != 0 {
-                    is_opposing = true;
-                }
+                let is_opposing = plane_idx % 2 != 0;
 
-                let plane = (&planes_lump.planes[plane / 2]).into();
-
-                let texture = slice_to_i32(&brush[4..8]) as usize;
-                if texture >= textures_lump.textures.len() {
-                    return Err(Error::BadRef {
-                        loc: "Brush.Side.Texture",
-                        val: texture,
-                    });
+                let texture_idx = slice_to_i32(&brush[4..8]) as usize;
+                if texture_idx >= textures_lump.textures.len() {
+                    return Err(invalid_error!("BrushSide references a texture that doesn't exist"));
                 }
-                let texture = (&textures_lump.textures[texture]).into();
 
                 sides.push(BrushSide {
-                    plane,
-                    is_opposing,
-                    texture,
+                    plane_idx,
+                    texture_idx,
+                    is_opposing
                 });
             }
         }
 
         Ok(sides.into_boxed_slice())
     }
-
-    /// Helper function to get an empty brushes lump.
-    /// This is used when initialising a BSP file because of references.
-    pub fn empty() -> BrushesLump<'static> {
-        BrushesLump {
-            brushes: vec![].into_boxed_slice(),
-        }
-    }
-}
-
-/// One brush record. Used for collision detection.
-/// "Each brush describes a convex volume as defined by its surrounding surfaces."
-#[derive(Debug, Clone, PartialEq)]
-pub struct Brush<'a> {
-    pub sides: Box<[BrushSide<'a>]>,
-    pub texture: TransparentNonNull<Texture<'a>>,
-}
-
-/// Bounding surfacce for brush.
-#[derive(Debug, Clone, PartialEq)]
-pub struct BrushSide<'a> {
-    pub plane: TransparentNonNull<Plane>,
-    pub is_opposing: bool,
-    pub texture: TransparentNonNull<Texture<'a>>,
 }

@@ -14,151 +14,113 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
-#![feature(try_trait)]
 
 #[macro_use]
 extern crate bitflags;
 extern crate bit_vec;
 extern crate nalgebra as na;
 
+#[macro_use]
+mod macros;
 pub mod directory;
 pub mod lumps;
 pub mod types;
 
-use std::pin::Pin;
-
-use directory::Header;
 use lumps::*;
+use directory::Header;
 use types::{Error, Result};
 
 /// Represents a parsed BSP file.
 #[derive(Debug, Clone)]
-pub struct BSPFile<'a> {
+pub struct BSPFile {
     pub directory: Header,
-    pub entities: EntitiesLump<'a>,
-    pub textures: TexturesLump<'a>,
+    pub entities: EntitiesLump,
+    pub textures: TexturesLump,
     pub planes: PlanesLump,
-    pub lightvols: LightVolsLump,
-    pub brushes: BrushesLump<'a>,
+    pub light_vols: LightVolsLump,
+    pub brushes: BrushesLump,
     pub vertices: VerticesLump,
     pub meshverts: MeshVertsLump,
-    pub lightmaps: LightmapsLump,
-    pub effects: EffectsLump<'a>,
-    pub faces: FaceLump<'a>,
-    pub tree: BSPTree<'a>,
+    pub light_maps: LightMapsLump,
+    pub effects: EffectsLump,
+    pub faces: FaceLump,
+    pub tree: BSPTree,
     pub visdata: VisDataLump,
-    pub models: ModelsLump<'a>,
+    pub models: ModelsLump,
 
     /// Only present for Quake live maps (IBSP47)
-    pub advertisements: Option<AdvertisementsLump<'a>>,
+    pub advertisements: Option<AdvertisementsLump>,
+
+    pub data: Box<[u8]>
 }
 
-impl<'a> BSPFile<'a> {
+impl BSPFile {
     /// Try to parse the given buffer a a BSP file
-    pub fn from_buffer(buf: &'a [u8]) -> Result<Pin<Box<BSPFile<'a>>>> {
-        let header = Header::from(buf)?;
+    pub fn from_buffer(buf: Box<[u8]>) -> Result<BSPFile> {
+        let header = Header::from(&buf)?;
 
         match header.version {
+            // Quake 3 or Quake LIVE (IBSP47)
             0x2e | 0x2f => {
-                // Quake 3 or Quake LIVE (IBSP47)
+                let entities = EntitiesLump::from_lump(header.get_lump(&buf, 0))?;
+                let textures = TexturesLump::from_lump(header.get_lump(&buf, 1))?;
+                let planes = PlanesLump::from_lump(header.get_lump(&buf, 2))?;
+                let vertices = VerticesLump::from_lump(header.get_lump(&buf, 10))?;
+                let meshverts = MeshVertsLump::from_lump(header.get_lump(&buf, 11))?;
+                let light_maps = LightMapsLump::from_lump(header.get_lump(&buf, 14))?;
+                let light_vols = LightVolsLump::from_lump(header.get_lump(&buf, 15))?;
+                let visdata = VisDataLump::from_lump(header.get_lump(&buf, 16))?;
+                let brushes = BrushesLump::from_lump(
+                    header.get_lump(&buf, 8),
+                    header.get_lump(&buf, 9),
+                    &textures,
+                    &planes
+                )?;
+                let effects = EffectsLump::from_lump(header.get_lump(&buf, 12), &brushes)?;
+                let faces = FaceLump::from_lump(
+                    header.get_lump(&buf, 13),
+                    &textures,
+                    &effects,
+                    &vertices,
+                    &meshverts,
+                    &light_maps,
+                )?;
+                let tree = BSPTree::from_lumps(
+                    header.get_lump(&buf, 3),
+                    header.get_lump(&buf, 4),
+                    header.get_lump(&buf, 5),
+                    header.get_lump(&buf, 6),
+                    &faces,
+                    &brushes,
+                )?;
 
-                // Because of the way this works, each "level" is compiled, moved into the struct, then repeat till the whole file is parsed.
-                // Each lump can only be parsed once all its dependents are, so the empty function is just a decoy, it should never be exposed.
-
-                // Level 1 - No dependencies
-                let entities = EntitiesLump::from_lump(header.get_lump(buf, 0))?;
-                let textures = TexturesLump::from_lump(header.get_lump(buf, 1))?;
-                let planes = PlanesLump::from_lump(header.get_lump(buf, 2))?;
-
-                let vertices = VerticesLump::from_lump(header.get_lump(buf, 10))?;
-                let meshverts = MeshVertsLump::from_lump(header.get_lump(buf, 11))?;
-
-                let lightmaps = LightmapsLump::from_lump(header.get_lump(buf, 14))?;
-                let lightvols = LightVolsLump::from_lump(header.get_lump(buf, 15))?;
-
-                let visdata = VisDataLump::from_lump(header.get_lump(buf, 16))?;
+                let models = ModelsLump::from_lump(header.get_lump(&buf, 7), &faces, &brushes)?;
 
                 // Quake Live has an advertisements lump
                 let advertisements = if header.version == 0x2f {
-                    Some(AdvertisementsLump::from_lump(header.get_lump(buf, 17))?)
+                    Some(AdvertisementsLump::from_lump(header.get_lump(&buf, 17))?)
                 } else {
                     None
                 };
 
-                let mut res = Box::pin(BSPFile {
+                Ok(BSPFile {
                     directory: header,
                     entities,
                     textures,
                     planes,
-                    lightvols,
-                    lightmaps,
-                    meshverts,
+                    light_vols,
+                    light_maps,
                     vertices,
-                    advertisements,
-                    effects: EffectsLump::empty(),
-                    brushes: BrushesLump::empty(),
-                    faces: FaceLump::empty(),
-                    tree: BSPTree::empty(),
+                    meshverts,
                     visdata,
-                    models: ModelsLump::empty(),
-                });
-
-                // Then the next level is constructed
-                let brushes = BrushesLump::from_lump(
-                    header.get_lump(buf, 8),
-                    header.get_lump(buf, 9),
-                    &res.textures,
-                    &res.planes,
-                )?;
-                // And moved into the *existing* struct
-                unsafe {
-                    let mut_ref = Pin::as_mut(&mut res);
-                    Pin::get_unchecked_mut(mut_ref).brushes = brushes;
-                }
-
-                // ---
-                let effects = EffectsLump::from_lump(header.get_lump(buf, 12), &res.brushes)?;
-
-                unsafe {
-                    let mut_ref = Pin::as_mut(&mut res);
-                    Pin::get_unchecked_mut(mut_ref).effects = effects;
-                }
-
-                // ---
-                let faces = FaceLump::from_lump(
-                    header.get_lump(buf, 13),
-                    &res.textures,
-                    &res.effects,
-                    &res.vertices,
-                    &res.meshverts,
-                    &res.lightmaps,
-                )?;
-
-                unsafe {
-                    let mut_ref = Pin::as_mut(&mut res);
-                    Pin::get_unchecked_mut(mut_ref).faces = faces;
-                }
-
-                // ---
-                let tree = BSPTree::from_lumps(
-                    header.get_lump(buf, 3),
-                    header.get_lump(buf, 4),
-                    header.get_lump(buf, 5),
-                    header.get_lump(buf, 6),
-                    &res.faces,
-                    &res.brushes,
-                )?;
-                let models =
-                    ModelsLump::from_lump(header.get_lump(buf, 7), &res.faces, &res.brushes)?;
-
-                unsafe {
-                    let mut_ref = Pin::as_mut(&mut res);
-                    let unchecked = Pin::get_unchecked_mut(mut_ref);
-                    unchecked.tree = tree;
-                    unchecked.models = models;
-                }
-
-                Ok(res)
+                    advertisements,
+                    brushes,
+                    effects,
+                    faces,
+                    tree,
+                    models,
+                    data: buf
+                })
             }
             _ => Err(Error::Unsupported {
                 version: header.version,

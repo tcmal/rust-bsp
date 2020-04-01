@@ -18,7 +18,7 @@
 use bit_vec::BitVec;
 
 use super::helpers::slice_to_i32;
-use crate::types::{Error, Result};
+use crate::types::Result;
 
 /// Stores cluster-to-cluster visibility information.
 #[derive(Debug, Clone)]
@@ -34,7 +34,7 @@ impl VisDataLump {
         let size_vecs = slice_to_i32(&data[4..8]) as usize;
 
         if data.len() - 8 != (n_vecs * size_vecs) {
-            return Err(Error::BadFormat);
+            return Err(invalid_error!("VisDataLump is incorrectly sized"));
         }
 
         let mut vecs = Vec::with_capacity(n_vecs);

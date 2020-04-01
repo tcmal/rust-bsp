@@ -17,10 +17,10 @@
 
 //! Parses the BSP tree into a usable format
 
-use super::brushes::{Brush, BrushesLump};
-use super::faces::{Face, FaceLump};
+use super::brushes::BrushesLump;
+use super::faces::FaceLump;
 use crate::lumps::helpers::{slice_to_i32, slice_to_vec3i};
-use crate::types::{Error, Result, TransparentNonNull};
+use crate::types::Result;
 use na::Vector3;
 
 const NODE_SIZE: usize = 4 + (4 * 2) + (4 * 3) + (4 * 3);
@@ -28,23 +28,43 @@ const LEAF_SIZE: usize = 4 * 6 + (4 * 3 * 2);
 
 /// Represents a BSP / binary tree.
 #[derive(Debug, Clone)]
-pub struct BSPTree<'a> {
+pub struct BSPTree {
     /// The root of this tree, first in the nodes lump for q3 files.
-    pub root: BSPNode<'a>,
+    pub root: BSPNode,
 }
 
-impl<'a> BSPTree<'a> {
+/// A node in a BSP tree.
+/// Either has two children *or* a leaf entry.
+#[derive(Debug, Clone)]
+pub struct BSPNode {
+    pub children: Option<Box<[BSPNode; 2]>>,
+    pub min: Vector3<i32>,
+    pub max: Vector3<i32>,
+    pub leaf: Option<BSPLeaf>,
+}
+
+/// A leaf in a BSP tree.
+/// Will be under a `BSPNode`, min and max values are stored there.
+#[derive(Debug, Clone)]
+pub struct BSPLeaf {
+    pub cluster_id: i32,
+    pub area: i32,
+    pub faces_idx: Box<[usize]>,
+    pub brushes_idx: Box<[usize]>,
+}
+
+impl BSPTree {
     /// Parses the nodes & leaves lumps into a usable BSP tree.
     pub fn from_lumps(
         nodes: &[u8],
         leaves: &[u8],
         leaf_faces: &[u8],
         leaf_brushes: &[u8],
-        faces: &FaceLump<'a>,
-        brushes: &BrushesLump<'a>,
-    ) -> Result<'a, BSPTree<'a>> {
+        faces: &FaceLump,
+        brushes: &BrushesLump,
+    ) -> Result<BSPTree> {
         if nodes.len() % NODE_SIZE != 0 || leaves.len() % LEAF_SIZE != 0 {
-            return Err(Error::BadFormat);
+            return Err(invalid_error!("BSPTree is incorrectly sized"));
         }
 
         Ok(BSPTree {
@@ -67,72 +87,70 @@ impl<'a> BSPTree<'a> {
         leaves: &[u8],
         leaf_faces: &[u8],
         leaf_brushes: &[u8],
-        faces_lump: &FaceLump<'a>,
-        brushes_lump: &BrushesLump<'a>,
-    ) -> Result<'a, BSPNode<'a>> {
+        faces_lump: &FaceLump,
+        brushes_lump: &BrushesLump,
+    ) -> Result<BSPNode> {
         if i < 0 {
             // Leaf.
             let i = i.abs() - 1;
 
             let raw = &leaves[i as usize * LEAF_SIZE..(i as usize * LEAF_SIZE) + LEAF_SIZE];
 
-            let start = slice_to_i32(&raw[32..36]) as usize;
-            let n = slice_to_i32(&raw[36..40]) as usize;
-            let mut faces = Vec::with_capacity(n);
-            if n > 0 {
-                if start + n > leaf_faces.len() / 4 {
-                    return Err(Error::BadRef {
-                        loc: "Tree.Leaf.LeafFaces",
-                        val: start + n,
-                    });
-                }
+            let faces_idx = {
+                let start = slice_to_i32(&raw[32..36]) as usize;
+                let n = slice_to_i32(&raw[36..40]) as usize;
 
-                for i in start..start + n {
-                    let face_index = slice_to_i32(&leaf_faces[i * 4..(i + 1) * 4]) as usize;
-                    if face_index >= faces_lump.faces.len() {
-                        return Err(Error::BadRef {
-                            loc: "Tree.LeafFace",
-                            val: face_index,
-                        });
+                let mut faces = Vec::with_capacity(n);
+                if n > 0 {
+                    if start + n > leaf_faces.len() / 4 {
+                        return Err(invalid_error!("Leaf references LeafFace that doesn't exist"));
                     }
-                    faces.push((&faces_lump.faces[face_index]).into());
-                }
-            }
 
-            let faces = faces.into_boxed_slice();
+                    for i in start..start + n {
+                        let face_idx = slice_to_i32(&leaf_faces[i * 4..(i + 1) * 4]) as usize;
+                        if face_idx >= faces_lump.faces.len() {
+                            return Err(invalid_error!("LeafFace references Face that doesn't exist"));
+                        }
 
-            let start = slice_to_i32(&raw[40..44]) as usize;
-            let n = slice_to_i32(&raw[44..48]) as usize;
-            let mut brushes = Vec::with_capacity(n);
-            if n > 0 {
-                if start + n > leaf_brushes.len() / 4 {
-                    return Err(Error::BadRef {
-                        loc: "Tree.Leaf.LeafBrushes",
-                        val: start + n,
-                    });
-                }
-
-                for i in start..start + n {
-                    let brush_index = slice_to_i32(&leaf_brushes[i * 4..(i + 1) * 4]) as usize;
-                    if brush_index >= brushes_lump.brushes.len() {
-                        return Err(Error::BadRef {
-                            loc: "Tree.LeafBrushes",
-                            val: brush_index,
-                        });
+                        faces.push(face_idx);
                     }
-                    brushes.push((&brushes_lump.brushes[brush_index]).into());
                 }
-            }
 
-            let brushes = brushes.into_boxed_slice();
+                faces.into_boxed_slice()
+
+
+            };
+
+            let brushes_idx = {
+                let start = slice_to_i32(&raw[40..44]) as usize;
+                let n = slice_to_i32(&raw[44..48]) as usize;
+                let mut brushes = Vec::with_capacity(n);
+            
+                if n > 0 {
+                    if start + n > leaf_brushes.len() / 4 {
+                        return Err(invalid_error!("Leaf references LeafBrush that doesn't exist"));
+                    }
+
+                    for i in start..start + n {
+                        let brush_idx = slice_to_i32(&leaf_brushes[i * 4..(i + 1) * 4]) as usize;
+                        if brush_idx >= brushes_lump.brushes.len() {
+                            return Err(invalid_error!("LeafBrush references Brush that doesn't exist"));
+                        }
+
+                        brushes.push(brush_idx);
+                    }
+                }
+
+                brushes.into_boxed_slice()
+            };
 
             let leaf = BSPLeaf {
                 cluster_id: slice_to_i32(&raw[0..4]),
                 area: slice_to_i32(&raw[4..8]),
                 // 8..20 = min
                 // 20..32 = max
-                faces,
-                brushes,
+                faces_idx,
+                brushes_idx,
             };
 
             Ok(BSPNode {
@@ -175,35 +193,4 @@ impl<'a> BSPTree<'a> {
             })
         }
     }
-
-    pub fn empty() -> BSPTree<'static> {
-        BSPTree {
-            root: BSPNode {
-                children: None,
-                min: Vector3::new(0, 0, 0),
-                max: Vector3::new(0, 0, 0),
-                leaf: None,
-            },
-        }
-    }
-}
-
-/// A node in a BSP tree.
-/// Either has two children *or* a leaf entry.
-#[derive(Debug, Clone)]
-pub struct BSPNode<'a> {
-    pub children: Option<Box<[BSPNode<'a>; 2]>>,
-    pub min: Vector3<i32>,
-    pub max: Vector3<i32>,
-    pub leaf: Option<BSPLeaf<'a>>,
-}
-
-/// A leaf in a BSP tree.
-/// Will be under a `BSPNode`, min and max values are stored there.
-#[derive(Debug, Clone)]
-pub struct BSPLeaf<'a> {
-    pub cluster_id: i32,
-    pub area: i32,
-    pub faces: Box<[TransparentNonNull<Face<'a>>]>,
-    pub brushes: Box<[TransparentNonNull<Brush<'a>>]>,
 }

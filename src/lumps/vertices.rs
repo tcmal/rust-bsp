@@ -16,7 +16,7 @@
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
 use super::helpers::{slice_to_f32, slice_to_i32, slice_to_vec3};
-use crate::types::{Error, Result, RGBA};
+use crate::types::{Result, RGBA};
 use na::Vector3;
 use std::convert::TryInto;
 
@@ -58,14 +58,13 @@ pub struct VerticesLump {
 
 impl VerticesLump {
     /// Parse a Vertices Lump from the data in a BSP file.
-    pub fn from_lump(lump: &[u8]) -> Result<'static, VerticesLump> {
+    pub fn from_lump(lump: &[u8]) -> Result<VerticesLump> {
         if lump.len() % VERTEX_SIZE != 0 {
-            return Err(Error::BadFormat);
+            return Err(invalid_error!("VerticesLump is incorrectly sized"));
         }
-
         let length = lump.len() / VERTEX_SIZE;
-        let mut vertices = Vec::with_capacity(length as usize);
 
+        let mut vertices = Vec::with_capacity(length as usize);
         for n in 0..length {
             let offset = n * VERTEX_SIZE;
             let vertex = &lump[offset..offset + VERTEX_SIZE];
@@ -98,14 +97,14 @@ pub struct MeshVertsLump {
 
 impl MeshVertsLump {
     /// Parse the given lump as a list of MeshVerts.
-    pub fn from_lump(lump: &[u8]) -> Result<'static, MeshVertsLump> {
+    pub fn from_lump(lump: &[u8]) -> Result<MeshVertsLump> {
         if lump.len() % 4 != 0 {
-            return Err(Error::BadFormat);
+            return Err(invalid_error!("MeshVertsLump is incorrectly sized"));
         }
-
         let length = lump.len() / 4;
-        let mut meshverts = Vec::with_capacity(length as usize);
 
+
+        let mut meshverts = Vec::with_capacity(length as usize);
         for n in 0..length {
             meshverts.push(MeshVert {
                 offset: slice_to_i32(&lump[n * 4..(n + 1) * 4]),

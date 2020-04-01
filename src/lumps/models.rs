@@ -15,38 +15,39 @@
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-use super::brushes::{Brush, BrushesLump};
-use super::faces::{Face, FaceLump};
+use super::brushes::BrushesLump;
+use super::faces::FaceLump;
 use super::helpers::{slice_to_i32, slice_to_vec3};
-use crate::types::{Error, Result, TransparentNonNull};
+use crate::types::Result;
 use na::Vector3;
+use std::ops::Range;
 
 const MODEL_SIZE: usize = (4 * 3 * 2) + (4 * 4);
 
 #[derive(Debug, Clone)]
-pub struct Model<'a> {
+pub struct Model {
     pub mins: Vector3<f32>,
     pub maxs: Vector3<f32>,
-    pub faces: Box<[TransparentNonNull<Face<'a>>]>,
-    pub brushes: Box<[TransparentNonNull<Brush<'a>>]>,
+    pub faces_idx: Range<usize>,
+    pub brushes_idx: Range<usize>,
 }
 
 #[derive(Debug, Clone)]
-pub struct ModelsLump<'a> {
-    pub models: Box<[Model<'a>]>,
+pub struct ModelsLump {
+    pub models: Box<[Model]>,
 }
 
-impl<'a> ModelsLump<'a> {
+impl ModelsLump {
     pub fn from_lump(
-        data: &'a [u8],
-        faces_lump: &FaceLump<'a>,
-        brushes_lump: &BrushesLump<'a>,
-    ) -> Result<'a, ModelsLump<'a>> {
+        data: &[u8],
+        faces_lump: &FaceLump,
+        brushes_lump: &BrushesLump,
+    ) -> Result<ModelsLump> {
         if data.len() % MODEL_SIZE != 0 {
-            return Err(Error::BadFormat);
+            return Err(invalid_error!("ModelsLump is incorrectly sized"));
         }
-
         let n_models = data.len() / MODEL_SIZE;
+
         let mut models = Vec::with_capacity(n_models);
         for n in 0..n_models {
             let raw = &data[n * MODEL_SIZE..(n + 1) * MODEL_SIZE];
@@ -54,52 +55,38 @@ impl<'a> ModelsLump<'a> {
             let mins = slice_to_vec3(&raw[0..12]);
             let maxs = slice_to_vec3(&raw[12..24]);
 
-            let first_face = slice_to_i32(&raw[24..28]) as usize;
-            let n_faces = slice_to_i32(&raw[28..32]) as usize;
+            let faces_idx = {
+                let start = slice_to_i32(&raw[24..28]) as usize;
+                let n = slice_to_i32(&raw[28..32]) as usize;
 
-            if first_face + n_faces > faces_lump.faces.len() {
-                return Err(Error::BadRef {
-                    loc: "Model.Face",
-                    val: n_faces,
-                });
-            }
+                if start + n > faces_lump.faces.len() {
+                    return Err(invalid_error!("Model references Face that doesn't exist"));
+                }
 
-            let faces = (first_face..first_face + n_faces)
-                .map(|x| TransparentNonNull::from(&faces_lump.faces[x]))
-                .collect::<Vec<TransparentNonNull<Face>>>()
-                .into_boxed_slice();
+                start..start+n
+            };
 
-            let first_brush = slice_to_i32(&raw[32..36]) as usize;
-            let n_brushes = slice_to_i32(&raw[36..40]) as usize;
+            let brushes_idx = {
+                let start = slice_to_i32(&raw[32..36]) as usize;
+                let n = slice_to_i32(&raw[36..40]) as usize;
 
-            if first_brush + n_brushes > brushes_lump.brushes.len() {
-                return Err(Error::BadRef {
-                    loc: "Model.Brush",
-                    val: n_brushes,
-                });
-            }
+                if start + n > brushes_lump.brushes.len() {
+                    return Err(invalid_error!("Model references Brush that doesn't exist"));
+                }
 
-            let brushes = (first_brush..first_brush + n_brushes)
-                .map(|x| TransparentNonNull::from(&brushes_lump.brushes[x]))
-                .collect::<Vec<TransparentNonNull<Brush>>>()
-                .into_boxed_slice();
+                start..start+n
+            };
 
             models.push(Model {
                 mins,
                 maxs,
-                faces,
-                brushes,
+                faces_idx,
+                brushes_idx,
             })
         }
 
         Ok(ModelsLump {
             models: models.into_boxed_slice(),
         })
-    }
-
-    pub fn empty() -> ModelsLump<'static> {
-        ModelsLump {
-            models: vec![].into_boxed_slice(),
-        }
     }
 }

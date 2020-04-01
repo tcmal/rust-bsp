@@ -15,14 +15,22 @@
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-use super::effects::{Effect, EffectsLump};
+use super::effects::EffectsLump;
 use super::helpers::{slice_to_i32, slice_to_vec2i, slice_to_vec3};
-use super::lightmaps::{Lightmap, LightmapsLump};
-use super::textures::{Texture, TexturesLump};
-use super::vertices::{MeshVert, MeshVertsLump, Vertex, VerticesLump};
-use crate::types::{Error, Result, TransparentNonNull};
+use super::light_maps::LightMapsLump;
+use super::textures::TexturesLump;
+use super::vertices::{MeshVertsLump, VerticesLump};
+use crate::types::Result;
 use na::{Vector2, Vector3};
+
+use std::ops::Range;
+
 const FACE_SIZE: usize = (4 * 8) + (4 * 2) + (4 * 2) + (4 * 3) + ((4 * 2) * 3) + (4 * 3) + (4 * 2);
+
+#[derive(Debug, Clone)]
+pub struct FaceLump {
+    pub faces: Box<[Face]>,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(i32)]
@@ -34,108 +42,120 @@ pub enum FaceType {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Face<'a> {
-    pub tex: TransparentNonNull<Texture<'a>>,
-    pub effect: Option<TransparentNonNull<Effect<'a>>>,
+pub struct Face {
     pub face_type: FaceType,
-    pub vertices: Box<[TransparentNonNull<Vertex>]>,
-    pub meshverts: Box<[TransparentNonNull<MeshVert>]>,
-    pub lightmap: Option<TransparentNonNull<Lightmap>>,
+    pub texture_idx: usize,
+    pub effect_idx: Option<usize>,
+    pub lightmap_idx: Option<usize>,
+    pub vertices_idx: Range<usize>,
+    pub meshverts_idx: Range<usize>,
+
     pub map_start: Vector2<i32>,
     pub map_size: Vector2<i32>,
     pub map_origin: Vector3<f32>,
     pub map_vecs: [Vector3<f32>; 2],
+    
     pub normal: Vector3<f32>,
     pub size: Vector2<i32>,
 }
 
-impl<'a> Face<'a> {
-    pub fn from_slice(
-        data: &'a [u8],
-        textures: &TexturesLump<'a>,
-        effects: &EffectsLump<'a>,
+impl FaceLump {
+    pub fn from_lump(
+        data: &[u8],
+        textures: &TexturesLump,
+        effects: &EffectsLump,
         vertices_lump: &VerticesLump,
         meshverts_lump: &MeshVertsLump,
-        lightmaps: &LightmapsLump,
-    ) -> Result<'a, Face<'a>> {
+        light_maps: &LightMapsLump,
+    ) -> Result<FaceLump> {
+        if data.len() % FACE_SIZE != 0 {
+            return Err(invalid_error!("FaceLump is incorrectly sized"));
+        }
+        let length = data.len() / FACE_SIZE;
+
+        let mut faces = Vec::with_capacity(length);
+        for n in 0..length {
+            faces.push(Face::from_slice(
+                &data[n * FACE_SIZE..(n + 1) * FACE_SIZE],
+                textures,
+                effects,
+                vertices_lump,
+                meshverts_lump,
+                light_maps,
+            )?);
+        }
+
+        Ok(FaceLump {
+            faces: faces.into_boxed_slice(),
+        })
+    }
+}
+
+
+impl Face {
+    pub fn from_slice(
+        data: &[u8],
+        textures: &TexturesLump,
+        effects: &EffectsLump,
+        vertices_lump: &VerticesLump,
+        meshverts_lump: &MeshVertsLump,
+        lightmaps: &LightMapsLump,
+    ) -> Result<Face> {
         if data.len() != FACE_SIZE {
             panic!("tried to call face.from_slice with invalid slice size");
         }
 
         // texture
-        let tex_id = slice_to_i32(&data[0..4]) as usize;
-        if tex_id >= textures.textures.len() {
-            return Err(Error::BadRef {
-                loc: "Face.Texture",
-                val: tex_id,
-            });
+        let texture_idx = slice_to_i32(&data[0..4]) as usize;
+        if texture_idx >= textures.textures.len() {
+            return Err(invalid_error!("Face references Texture that doesn't exist"));
         }
-        let tex = (&textures.textures[tex_id]).into();
 
         // effects
-        let effect_id = slice_to_i32(&data[4..8]) as usize;
-        let mut effect = None;
-        if effect_id < 0xffffffff {
-            if effect_id >= effects.effects.len() {
-                return Err(Error::BadRef {
-                    loc: "Face.Effect",
-                    val: effect_id,
-                });
+        let effect_idx = slice_to_i32(&data[4..8]) as usize;
+        let effect_idx = if effect_idx < 0xffffffff {
+            if effect_idx >= effects.effects.len() {
+                return Err(invalid_error!("Face references Effect that doesn't exist"));
             }
-            effect = Some((&effects.effects[effect_id]).into());
-        }
+
+            Some(effect_idx)
+        } else {
+            None
+        };
 
         // face type
+        // TODO
         let face_type: FaceType = unsafe { ::std::mem::transmute(slice_to_i32(&data[8..12])) };
 
         // vertices
         let vertex_offset = slice_to_i32(&data[12..16]) as usize;
         let vertex_n = slice_to_i32(&data[16..20]) as usize;
-
         if (vertex_offset + vertex_n) > vertices_lump.vertices.len() {
-            return Err(Error::BadRef {
-                loc: "Face.Vertices",
-                val: vertex_offset,
-            });
+            return Err(invalid_error!("Face references Vertex that doesn't exist"));
         }
 
-        let mut vertices = Vec::with_capacity(vertex_n);
-        for i in vertex_offset..vertex_offset + vertex_n {
-            vertices.push((&vertices_lump.vertices[i]).into());
-        }
-
-        let vertices = vertices.into_boxed_slice();
+        let vertices_idx = vertex_offset..vertex_offset + vertex_n;
 
         // meshverts
         let meshverts_offset = slice_to_i32(&data[20..24]) as usize;
         let meshverts_n = slice_to_i32(&data[24..28]) as usize;
-
         if (meshverts_offset + meshverts_n) > meshverts_lump.meshverts.len() {
-            return Err(Error::BadRef {
-                loc: "Face.MeshVerts",
-                val: meshverts_offset,
-            });
+            return Err(invalid_error!("Face references MeshVert that doesn't exist"));
         }
 
-        let mut meshverts = Vec::with_capacity(meshverts_n);
-        for i in meshverts_offset..meshverts_offset + meshverts_n {
-            meshverts.push((&meshverts_lump.meshverts[i]).into());
-        }
-
-        let meshverts = meshverts.into_boxed_slice();
+        let meshverts_idx = meshverts_offset..meshverts_offset + meshverts_n;
 
         // lightmap
-        let lightmap_id = slice_to_i32(&data[28..32]) as usize;
-        let mut lightmap = None;
-        if lightmap_id < 0xffffffff {
-            if lightmap_id >= lightmaps.maps.len() {
-                return Err(Error::BadRef {
-                    loc: "Face.Lightmap",
-                    val: lightmap_id,
-                });
+        let lightmap_idx = slice_to_i32(&data[28..32]) as usize;
+        let lightmap_idx = if lightmap_idx < 0xffffffff {
+            if lightmap_idx >= lightmaps.maps.len() {
+                return Err(invalid_error!("Face references LightMap that doesn't exist"));
             }
-            lightmap = Some((&lightmaps.maps[lightmap_id]).into());
-        }
+
+            Some(lightmap_idx)
+        } else {
+            None
+        };
 
         // map properties
         let map_start = slice_to_vec2i(&data[32..40]);
@@ -154,12 +174,12 @@ impl<'a> Face<'a> {
         let size = slice_to_vec2i(&data[96..104]);
 
         Ok(Face {
-            tex,
-            effect,
             face_type,
-            vertices,
-            meshverts,
-            lightmap,
+            texture_idx,
+            effect_idx,
+            vertices_idx,
+            meshverts_idx,
+            lightmap_idx,
             map_start,
             map_size,
             map_origin,
@@ -167,48 +187,5 @@ impl<'a> Face<'a> {
             normal,
             size,
         })
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct FaceLump<'a> {
-    pub faces: Box<[Face<'a>]>,
-}
-
-impl<'a> FaceLump<'a> {
-    pub fn from_lump(
-        data: &'a [u8],
-        textures: &TexturesLump<'a>,
-        effects: &EffectsLump<'a>,
-        vertices_lump: &VerticesLump,
-        meshverts_lump: &MeshVertsLump,
-        lightmaps: &LightmapsLump,
-    ) -> Result<'a, FaceLump<'a>> {
-        if data.len() % FACE_SIZE != 0 {
-            return Err(Error::BadFormat);
-        }
-        let length = data.len() / FACE_SIZE;
-
-        let mut faces = Vec::with_capacity(length);
-        for n in 0..length {
-            faces.push(Face::from_slice(
-                &data[n * FACE_SIZE..(n + 1) * FACE_SIZE],
-                textures,
-                effects,
-                vertices_lump,
-                meshverts_lump,
-                lightmaps,
-            )?);
-        }
-
-        Ok(FaceLump {
-            faces: faces.into_boxed_slice(),
-        })
-    }
-
-    pub fn empty() -> FaceLump<'static> {
-        FaceLump {
-            faces: vec![].into_boxed_slice(),
-        }
     }
 }
