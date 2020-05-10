@@ -49,9 +49,7 @@ pub struct BSPFile {
     pub models: ModelsLump,
 
     /// Only present for Quake live maps (IBSP47)
-    pub advertisements: Option<AdvertisementsLump>,
-
-    pub data: Box<[u8]>
+    pub advertisements: Option<AdvertisementsLump>
 }
 
 impl BSPFile {
@@ -118,8 +116,7 @@ impl BSPFile {
                     effects,
                     faces,
                     tree,
-                    models,
-                    data: buf
+                    models
                 })
             }
             _ => Err(Error::Unsupported {
