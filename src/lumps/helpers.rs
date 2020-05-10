@@ -34,6 +34,13 @@ pub fn slice_to_u32(slice: &[u8]) -> u32 {
     u32::from_le_bytes(slice.try_into().unwrap())
 }
 
+/// Turn a slice into a le usize, the int datatype in a bsp file
+/// # Panics
+/// If slice is not 4 bytes long.
+pub fn slice_to_usize(slice: &[u8]) -> usize {
+    usize::from_le_bytes(slice.try_into().unwrap())
+}
+
 /// Turn a slice into a le f32, the float datatype in a bsp file.
 /// # Panics
 /// If slice is not 4 bytes long
