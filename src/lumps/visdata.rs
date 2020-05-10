@@ -48,4 +48,9 @@ impl VisDataLump {
             vecs: vecs.into_boxed_slice(),
         })
     }
+
+    /// Returns true if `looking` is visible from `from` according to visdata.
+    pub fn visible_from(&self, from: usize, looking: usize) -> bool {
+        self.vecs[from][looking]
+    }
 }
