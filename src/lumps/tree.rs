@@ -48,7 +48,7 @@ pub struct BSPNode {
 /// Will be under a `BSPNode`, min and max values are stored there.
 #[derive(Debug, Clone)]
 pub struct BSPLeaf {
-    pub cluster_id: i32,
+    pub cluster_id: u32,
     pub area: i32,
     pub faces_idx: Box<[usize]>,
     pub brushes_idx: Box<[usize]>,
