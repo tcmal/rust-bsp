@@ -19,7 +19,7 @@
 
 use super::brushes::BrushesLump;
 use super::faces::FaceLump;
-use crate::lumps::helpers::{slice_to_i32, slice_to_vec3i};
+use crate::lumps::helpers::{slice_to_u32, slice_to_i32, slice_to_vec3i};
 use crate::types::Result;
 use na::Vector3;
 
@@ -37,6 +37,7 @@ pub struct BSPTree {
 /// Either has two children *or* a leaf entry.
 #[derive(Debug, Clone)]
 pub struct BSPNode {
+    pub plane_idx: u32,
     pub children: Option<Box<[BSPNode; 2]>>,
     pub min: Vector3<i32>,
     pub max: Vector3<i32>,
@@ -154,6 +155,7 @@ impl BSPTree {
             };
 
             Ok(BSPNode {
+                plane_idx: 0,
                 children: None,
                 min: slice_to_vec3i(&raw[8..20]),
                 max: slice_to_vec3i(&raw[20..32]),
@@ -163,7 +165,7 @@ impl BSPTree {
             // Node.
             let raw = &nodes[i as usize * NODE_SIZE..(i as usize * NODE_SIZE) + NODE_SIZE];
 
-            // 0..4 = i
+            let plane_idx = slice_to_u32(&raw[0..4]);
             let child_one = BSPTree::compile_node(
                 slice_to_i32(&raw[4..8]),
                 nodes,
@@ -186,6 +188,7 @@ impl BSPTree {
             let max = slice_to_vec3i(&raw[24..36]);
 
             Ok(BSPNode {
+                plane_idx,
                 children: Some(Box::new([child_one, child_two])),
                 min,
                 max,
