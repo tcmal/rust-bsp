@@ -1,6 +1,6 @@
 [package]
 name = "stockton-bsp"
-version = "2.0.0"
+version = "3.0.0"
 authors = ["tcmal <oscar.shrimpton.personal@gmail.com>"]
 description = "Library for parsing Q3 .bsp files."
 repository = "https://github.com/tcmal/rust-bsp"
