@@ -16,12 +16,12 @@
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
 extern crate nalgebra as na;
-#[cfg(test)]
 extern crate stockton_bsp;
 
 mod advertisements;
 mod brushes;
 mod effects;
+mod entities;
 mod lightmaps;
 mod models;
 mod tree;

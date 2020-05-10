@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with stockton-bsp.  If not, see <http://www.gnu.org/licenses/>.
 
-use stockton_bsp::lumps::LightmapsLump;
+use stockton_bsp::lumps::LightMapsLump;
 use stockton_bsp::types::RGB;
 
 #[test]
 fn test_lightmaps() {
     let lump = include_bytes!("./test_lightmaps.bin");
 
-    let parsed = LightmapsLump::from_lump(lump).unwrap();
+    let parsed = LightMapsLump::from_lump(lump).unwrap();
 
     assert_eq!(parsed.maps.len(), 1);
 

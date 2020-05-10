@@ -30,17 +30,17 @@ fn test_brushes() {
     let textures = TexturesLump {
         textures: vec![
             Texture {
-                name: "One",
+                name: "One".to_string(),
                 surface: SurfaceFlags::SKIP,
                 contents: ContentsFlags::SOLID,
             },
             Texture {
-                name: "Two",
+                name: "Two".to_string(),
                 surface: SurfaceFlags::SKIP,
                 contents: ContentsFlags::SOLID,
             },
             Texture {
-                name: "Three",
+                name: "Three".to_string(),
                 surface: SurfaceFlags::SKIP,
                 contents: ContentsFlags::SOLID,
             },
@@ -71,12 +71,18 @@ fn test_brushes() {
 
     let parsed = BrushesLump::from_lump(brushes, sides, &textures, &planes).unwrap();
 
-    assert_eq!(*parsed.brushes[0].texture, textures.textures[0]);
+    assert_eq!(parsed.brushes[0].texture_idx, 0);
     assert_eq!(parsed.brushes[0].sides.len(), 1);
+    assert_eq!(parsed.brushes[0].sides[0].plane_idx, 0);
+    assert_eq!(parsed.brushes[0].sides[0].texture_idx, 0);
 
-    assert_eq!(*parsed.brushes[1].texture, textures.textures[1]);
+    assert_eq!(parsed.brushes[1].texture_idx, 1);
     assert_eq!(parsed.brushes[1].sides.len(), 2);
+    assert_eq!(parsed.brushes[1].sides[0].plane_idx, 1);
+    assert_eq!(parsed.brushes[1].sides[0].texture_idx, 1);
+    assert_eq!(parsed.brushes[1].sides[1].plane_idx, 2);
+    assert_eq!(parsed.brushes[1].sides[1].texture_idx, 2);
 
-    assert_eq!(*parsed.brushes[2].texture, textures.textures[2]);
+    assert_eq!(parsed.brushes[2].texture_idx, 2);
     assert_eq!(parsed.brushes[2].sides.len(), 0);
 }

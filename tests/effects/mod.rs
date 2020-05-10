@@ -17,19 +17,13 @@
 
 use stockton_bsp::lumps::brushes::{Brush, BrushesLump};
 use stockton_bsp::lumps::effects::EffectsLump;
-use stockton_bsp::lumps::textures::{ContentsFlags, SurfaceFlags, Texture};
-use stockton_bsp::types::TransparentNonNull;
 
 #[test]
 fn test_effects() {
     let brushes = BrushesLump {
         brushes: Box::new([Brush {
             sides: vec![].into_boxed_slice(),
-            texture: TransparentNonNull::from(&Texture {
-                name: "one",
-                surface: SurfaceFlags::SKIP,
-                contents: ContentsFlags::SOLID,
-            }),
+            texture_idx: 0,
         }]),
     };
 
@@ -41,5 +35,5 @@ fn test_effects() {
 
     assert_eq!(parsed.effects[0].name, format!("{:64}", "test"));
 
-    assert_eq!(*parsed.effects[0].brush, brushes.brushes[0]);
+    assert_eq!(parsed.effects[0].brush_idx, 0);
 }

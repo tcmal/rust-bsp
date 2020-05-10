@@ -55,7 +55,7 @@ pub struct BSPFile {
 }
 
 impl BSPFile {
-    /// Try to parse the given buffer a a BSP file
+    /// Try to parse the given buffer as a BSP file
     pub fn from_buffer(buf: Box<[u8]>) -> Result<BSPFile> {
         let header = Header::from(&buf)?;
 

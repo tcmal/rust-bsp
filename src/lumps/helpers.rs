@@ -63,13 +63,6 @@ pub fn slice_to_vec3i(slice: &[u8]) -> Vector3<i32> {
     )
 }
 
-/// Turn a slice of floats into a 2D vector
-/// # Panics
-/// If slice isn't 8 bytes long.
-pub fn slice_to_vec2(slice: &[u8]) -> Vector2<f32> {
-    Vector2::new(slice_to_f32(&slice[0..4]), slice_to_f32(&slice[4..8]))
-}
-
 /// Turn a slice of i32s into a 2D vector
 /// # Panics
 /// If slice isn't 8 bytes long.

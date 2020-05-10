@@ -43,7 +43,7 @@ pub struct Brush {
     pub texture_idx: usize,
 }
 
-/// Bounding surfacce for brush.
+/// Bounding surface for brush.
 #[derive(Debug, Clone, PartialEq)]
 pub struct BrushSide {
     pub plane_idx: usize,

@@ -18,24 +18,18 @@
 use na::{Vector2, Vector3};
 use stockton_bsp::lumps::brushes::{Brush, BrushesLump};
 use stockton_bsp::lumps::faces::{Face, FaceLump, FaceType};
-use stockton_bsp::lumps::textures::{ContentsFlags, SurfaceFlags, Texture};
 use stockton_bsp::lumps::ModelsLump;
 
 #[test]
 fn test_models() {
-    let tex = Texture {
-        name: "test",
-        surface: SurfaceFlags::SKIP,
-        contents: ContentsFlags::SOLID,
-    };
     let faces = FaceLump {
         faces: vec![Face {
-            tex: (&tex).into(),
-            effect: None,
             face_type: FaceType::Polygon,
-            vertices: vec![].into_boxed_slice(),
-            meshverts: vec![].into_boxed_slice(),
-            lightmap: None,
+            texture_idx: 0,
+            effect_idx: None,
+            vertices_idx: 0..0,
+            lightmap_idx: None,
+            meshverts_idx: 0..0,
             map_start: Vector2::new(0, 0),
             map_size: Vector2::new(0, 0),
             map_origin: Vector3::new(0.0, 0.0, 0.0),
@@ -48,7 +42,7 @@ fn test_models() {
     let brushes = BrushesLump {
         brushes: vec![Brush {
             sides: vec![].into_boxed_slice(),
-            texture: (&tex).into(),
+            texture_idx: 0,
         }]
         .into_boxed_slice(),
     };
@@ -63,9 +57,6 @@ fn test_models() {
     assert_eq!(lump.models[0].mins, Vector3::new(1.0, 2.0, 3.0));
     assert_eq!(lump.models[0].maxs, Vector3::new(4.0, 5.0, 6.0));
 
-    assert_eq!(lump.models[0].faces.len(), 1);
-    assert_eq!(*lump.models[0].faces[0], faces.faces[0]);
-
-    assert_eq!(lump.models[0].brushes.len(), 1);
-    assert_eq!(*lump.models[0].brushes[0], brushes.brushes[0]);
+    assert_eq!(lump.models[0].faces_idx, 0..1);
+    assert_eq!(lump.models[0].brushes_idx, 0..1);
 }

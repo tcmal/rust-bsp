@@ -18,26 +18,20 @@
 use na::{Vector2, Vector3};
 use stockton_bsp::lumps::brushes::{Brush, BrushesLump};
 use stockton_bsp::lumps::faces::{Face, FaceLump, FaceType};
-use stockton_bsp::lumps::textures::{ContentsFlags, SurfaceFlags, Texture};
 use stockton_bsp::lumps::BSPTree;
 
 #[test]
 fn test_tree() {
     let buf = include_bytes!("./test_tree.bin");
 
-    let tex = Texture {
-        name: "one",
-        surface: SurfaceFlags::SKIP,
-        contents: ContentsFlags::SOLID,
-    };
     let faces = FaceLump {
         faces: vec![Face {
-            tex: (&tex).into(),
-            effect: None,
-            face_type: FaceType::Mesh,
-            vertices: vec![].into_boxed_slice(),
-            meshverts: vec![].into_boxed_slice(),
-            lightmap: None,
+            face_type: FaceType::Polygon,
+            texture_idx: 0,
+            effect_idx: None,
+            vertices_idx: 0..0,
+            lightmap_idx: None,
+            meshverts_idx: 0..0,
             map_start: Vector2::new(0, 0),
             map_size: Vector2::new(0, 0),
             map_origin: Vector3::new(0.0, 0.0, 0.0),
@@ -51,7 +45,7 @@ fn test_tree() {
     let brushes = BrushesLump {
         brushes: vec![Brush {
             sides: vec![].into_boxed_slice(),
-            texture: (&tex).into(),
+            texture_idx: 0,
         }]
         .into_boxed_slice(),
     };
