@@ -19,7 +19,7 @@
 
 use super::brushes::BrushesLump;
 use super::faces::FaceLump;
-use crate::lumps::helpers::{slice_to_usize, slice_to_i32, slice_to_vec3i};
+use crate::lumps::helpers::{slice_to_u32, slice_to_i32, slice_to_vec3i};
 use crate::types::Result;
 use na::Vector3;
 
@@ -37,7 +37,7 @@ pub struct BSPTree {
 /// Either has two children *or* a leaf entry.
 #[derive(Debug, Clone)]
 pub struct BSPNode {
-    pub plane_idx: usize,
+    pub plane_idx: u32,
     pub children: Option<Box<[BSPNode; 2]>>,
     pub min: Vector3<i32>,
     pub max: Vector3<i32>,
@@ -48,10 +48,10 @@ pub struct BSPNode {
 /// Will be under a `BSPNode`, min and max values are stored there.
 #[derive(Debug, Clone)]
 pub struct BSPLeaf {
-    pub cluster_id: usize,
+    pub cluster_id: u32,
     pub area: i32,
-    pub faces_idx: Box<[usize]>,
-    pub brushes_idx: Box<[usize]>,
+    pub faces_idx: Box<[u32]>,
+    pub brushes_idx: Box<[u32]>,
 }
 
 impl BSPTree {
@@ -98,8 +98,8 @@ impl BSPTree {
             let raw = &leaves[i as usize * LEAF_SIZE..(i as usize * LEAF_SIZE) + LEAF_SIZE];
 
             let faces_idx = {
-                let start = slice_to_i32(&raw[32..36]) as usize;
-                let n = slice_to_i32(&raw[36..40]) as usize;
+                let start = slice_to_u32(&raw[32..36]) as usize;
+                let n = slice_to_u32(&raw[36..40]) as usize;
 
                 let mut faces = Vec::with_capacity(n);
                 if n > 0 {
@@ -108,8 +108,8 @@ impl BSPTree {
                     }
 
                     for i in start..start + n {
-                        let face_idx = slice_to_i32(&leaf_faces[i * 4..(i + 1) * 4]) as usize;
-                        if face_idx >= faces_lump.faces.len() {
+                        let face_idx = slice_to_u32(&leaf_faces[i * 4..(i + 1) * 4]);
+                        if face_idx as usize >= faces_lump.faces.len() {
                             return Err(invalid_error!("LeafFace references Face that doesn't exist"));
                         }
 
@@ -121,8 +121,8 @@ impl BSPTree {
             };
 
             let brushes_idx = {
-                let start = slice_to_i32(&raw[40..44]) as usize;
-                let n = slice_to_i32(&raw[44..48]) as usize;
+                let start = slice_to_u32(&raw[40..44]) as usize;
+                let n = slice_to_u32(&raw[44..48]) as usize;
                 let mut brushes = Vec::with_capacity(n);
             
                 if n > 0 {
@@ -131,8 +131,8 @@ impl BSPTree {
                     }
 
                     for i in start..start + n {
-                        let brush_idx = slice_to_i32(&leaf_brushes[i * 4..(i + 1) * 4]) as usize;
-                        if brush_idx >= brushes_lump.brushes.len() {
+                        let brush_idx = slice_to_u32(&leaf_brushes[i * 4..(i + 1) * 4]);
+                        if brush_idx as usize >= brushes_lump.brushes.len() {
                             return Err(invalid_error!("LeafBrush references Brush that doesn't exist"));
                         }
 
@@ -144,7 +144,7 @@ impl BSPTree {
             };
 
             let leaf = BSPLeaf {
-                cluster_id: slice_to_usize(&raw[0..4]),
+                cluster_id: slice_to_u32(&raw[0..4]),
                 area: slice_to_i32(&raw[4..8]),
                 // 8..20 = min
                 // 20..32 = max
@@ -163,7 +163,7 @@ impl BSPTree {
             // Node.
             let raw = &nodes[i as usize * NODE_SIZE..(i as usize * NODE_SIZE) + NODE_SIZE];
 
-            let plane_idx = slice_to_usize(&raw[0..4]);
+            let plane_idx = slice_to_u32(&raw[0..4]);
             let child_one = BSPTree::compile_node(
                 slice_to_i32(&raw[4..8]),
                 nodes,

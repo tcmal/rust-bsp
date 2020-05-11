@@ -53,17 +53,14 @@ fn test_brushes() {
             Plane {
                 normal: Vector3::new(0.0, 0.0, 0.0),
                 dist: 1.0,
-                complement_normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Plane {
                 normal: Vector3::new(0.0, 0.0, 0.0),
                 dist: 2.0,
-                complement_normal: Vector3::new(0.0, 0.0, 0.0),
             },
             Plane {
                 normal: Vector3::new(0.0, 0.0, 0.0),
                 dist: 3.0,
-                complement_normal: Vector3::new(0.0, 0.0, 0.0),
             },
         ]
         .into_boxed_slice(),

@@ -43,17 +43,13 @@ impl PlanesLump {
 
 
         let mut planes = Vec::with_capacity(length / 2);
-        let mut n = 0;
-        while n < length {
+        for n in 0..length {
             let offset = n * PLANE_SIZE;
-            let plane = &lump[offset..offset + (PLANE_SIZE * 2)];
+            let plane = &lump[offset..offset + PLANE_SIZE];
             planes.push(Plane {
                 normal: slice_to_vec3(&plane[0..12]),
                 dist: slice_to_f32(&plane[12..16]),
-                complement_normal: slice_to_vec3(&plane[16..28]),
             });
-
-            n += 2;
         }
 
         Ok(PlanesLump {
@@ -70,32 +66,4 @@ pub struct Plane {
 
     /// Distance from origin to plane along normal
     pub dist: f32,
-
-    /// Opposing normal from coincident plane
-    /// This comes from the next plane in the lump.
-    pub complement_normal: Vector3<f32>,
-}
-
-#[test]
-fn planes_lump() {
-    //                  x                           y                       z                          dist
-    let buf: &[u8] = &[
-        0x66, 0xe6, 0xf6, 0x42, 0xd7, 0x63, 0xe4, 0x43, 0x00, 0x00, 0x61, 0x44, 0x00, 0x00, 0xc8,
-        0x42, 0x00, 0x00, 0x61, 0x44, 0xd7, 0x63, 0xe4, 0x43, 0x66, 0xe6, 0xf6, 0x42, 0x00, 0x00,
-        0x00, 0x00,
-    ];
-
-    let lump = PlanesLump::from_lump(buf).unwrap();
-
-    assert_eq!(lump.planes.len(), 1);
-
-    assert_eq!(lump.planes[0].normal.x, 123.45);
-    assert_eq!(lump.planes[0].normal.y, 456.78);
-    assert_eq!(lump.planes[0].normal.z, 900.00);
-
-    assert_eq!(lump.planes[0].dist, 100.0);
-
-    assert_eq!(lump.planes[0].complement_normal.x, 900.0);
-    assert_eq!(lump.planes[0].complement_normal.y, 456.78);
-    assert_eq!(lump.planes[0].complement_normal.z, 123.45);
 }
