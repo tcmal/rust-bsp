@@ -30,6 +30,10 @@ pub struct VisDataLump {
 }
 impl VisDataLump {
     pub fn from_lump(data: &[u8]) -> Result<VisDataLump> {
+        if data.len() < 8 {
+            return Err(invalid_error!("VisDataLump is incorrectly sized"));
+        }
+        
         let n_vecs = slice_to_i32(&data[0..4]) as usize;
         let size_vecs = slice_to_i32(&data[4..8]) as usize;
 
