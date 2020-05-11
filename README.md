@@ -9,6 +9,4 @@ See [CONTRIBUTING.md](https://github.com/tcmal/rust-bsp/blob/master/CONTRIBUTING
 
 # License
 
-Most the code/assets in this repository are licensed under GPlv3.0 with the following exceptions:
-
-	- `tests/13power.bsp` - [Powerstation Extended](http://sst13.de/13power.php) by Stefan Scholz (sst13)
+All code/assets in this repository are licensed under GPlv3.0.

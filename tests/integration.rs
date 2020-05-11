@@ -21,7 +21,7 @@ use stockton_bsp::BSPFile;
 
 #[test]
 fn test_basic() {
-    let data = include_bytes!("./13power.bsp").to_vec().into_boxed_slice();
+    let data = include_bytes!("./test.bsp").to_vec().into_boxed_slice();
 
     let _lump = BSPFile::from_buffer(data).unwrap();
 }
